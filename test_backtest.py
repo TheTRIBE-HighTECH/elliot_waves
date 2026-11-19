@@ -38,11 +38,12 @@ class InitiationTests(unittest.TestCase):
             'clock_speed': 1.0,
         })
         axis = np.arange(len(frame))
-        waves = {3: (2, 0, 1, .5)}
+        waves = {3: (2, 0, 1, .25)}
         config = {**DEFAULTS, 'wave_duration_min': 0}
         entries = signals('C', frame, axis, axis, waves, config)
         self.assertEqual(list(entries), [5])
         self.assertEqual(entries[5][3], 120)
+        self.assertAlmostEqual(entries[5][1], 109 + 1.618 * (120 - 99))
         self.assertEqual(signals('C', frame.iloc[:5], axis[:5], axis[:5], waves, config), {})
         frame.loc[5, 'low'] = 108
         self.assertEqual(signals('C', frame, axis, axis, waves, config), {})
@@ -52,6 +53,10 @@ class InitiationTests(unittest.TestCase):
         frame.loc[6, 'open'] = 119
         result = execute(frame, entries, 0, len(frame), config)
         self.assertEqual(result['orders'][0]['status'], 'abaixo_do_rompimento')
+        frame.loc[6, ['open', 'high']] = [125, 150]
+        result = execute(frame, entries, 0, len(frame), config)
+        self.assertEqual(result['trades'][0]['reason'], 'alvo')
+        self.assertAlmostEqual(result['trades'][0]['raw_exit'], entries[5][1])
 
     def test_information_clock_initial_and_prefix_invariance(self):
         frame = bars(500)

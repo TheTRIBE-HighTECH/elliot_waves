@@ -30,8 +30,8 @@
         <label>Reversão de pivô (%) <input name="reversal" type="number" min=".01" max="50" step=".01" value=".6" required></label>
         <label>Projeção do alvo <input name="target_multiple" type="number" min=".1" max="10" step=".001" value="1.618" required></label>
         <label>Hurst mínimo (opcional) <input name="hurst_min" type="number" min="0" max="1" step=".01"></label>
-        <label>Velocidade mínima de D <input name="speed_min" type="number" min=".35" max="3.5" step=".01" value=".8"></label>
-        <label>Duração mínima do impulso (unidades do relógio) <input name="wave_duration_min" type="number" min="0" max="25" step=".1" value="2" required></label>
+        <label>Velocidade mínima de D <input name="speed_min" type="number" min=".35" max="3.5" step=".01"></label>
+        <label>Duração mínima do impulso (unidades do relógio) <input name="wave_duration_min" type="number" min="0" max="25" step=".1" value="0" required></label>
         <label>Ordem de entrada <select name="order_type"><option value="market">Mercado</option><option value="limit">Limite passiva</option></select></label>
         <label>Taxa maker (bps) <input name="maker_bps" type="number" min="0" max="500" step=".1" value="10" required></label>
         <label>Taxa taker (bps) <input name="fee_bps" type="number" min="0" max="500" step=".1" value="10" required></label>
@@ -41,7 +41,7 @@
         <label>Pesos do score geométrico <input name="score_weights" value="1, 1, 1, 1, 1" required></label>
         <label>Embargo (candles) <input name="embargo" type="number" min="0" max="100" value="3" required></label>
         <label>Janelas walk-forward <input name="walk_folds" type="number" min="1" max="6" value="3" required></label>
-        <p>Elliott: após confirmar a onda 2, o sinal exige fechamento acima da máxima da onda 1.</p>
+        <p>Elliott: após confirmar a onda 2, o sinal exige fechamento acima do topo da onda 1. Alvo: fundo da onda 2 + projeção × amplitude da onda 1.</p>
         <p>Pesos na ordem: Fibonacci, estrutura, duração, Hurst e atraso de confirmação.</p>
       </fieldset>
       <button id="run">Executar backtest</button> <button type="button" id="cancel" hidden>Cancelar</button>

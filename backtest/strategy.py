@@ -31,10 +31,8 @@ def pivot_events(prices, reversal):
                 ratio = (prices[b.index] - prices[c.index]) / rise
                 valid = 0 < ratio < 1
                 event['wave2'] = {'indices': [a.index, b.index, c.index], 'ratio': ratio,
-                                  'state': 'CANDIDATA' if valid else 'INVALIDADA'}
+                                  'state': 'CONFIRMADA' if valid else 'INVALIDADA'}
                 if valid:
-                    if .382 <= ratio <= .786:
-                        event['wave2']['state'] = 'CONFIRMADA'
                     entries[known] = (c.index, a.index, b.index, ratio)
         if len(history) >= 6:
             impulses = best_fibonacci_impulses(prices, history[-6:])
@@ -68,15 +66,15 @@ def signals(model, candles, axis, h, waves, config):
         setup = None
         for i in range(1, len(close)):
             if i in waves:
-                correction, start, top, ratio = waves[i]
+                correction, start, top, _ = waves[i]
                 setup = None
-                if axis[correction] - axis[start] >= config['wave_duration_min'] and (
-                        not config['use_fibonacci'] or .382 <= ratio <= .786):
+                if (low[correction] > low[start]
+                        and axis[correction] - axis[start] >= config['wave_duration_min']):
                     breakout = float(np.max(high[start:top + 1]))
                     floor = low[correction]
                     stop = floor * (1 - config['stop_buffer'])
                     multiple = config['target_multiple'] if config['use_fibonacci'] else 1.0
-                    target = close[correction] + multiple * (close[top] - close[start])
+                    target = floor + multiple * (breakout - low[start])
                     if target > breakout and np.min(low[correction + 1:i + 1]) >= floor:
                         setup = (breakout, floor, stop, target)
             if setup is None:

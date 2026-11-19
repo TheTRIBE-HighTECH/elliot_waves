@@ -13,13 +13,13 @@ from .engine import execute
 from .statistics import block_ci, conclusion, geometry_scores, metrics
 from .strategy import pivot_events, signals, trailing_hurst
 
-VERSION = '1.1.1'
+VERSION = '1.2.0'
 DEFAULTS = {'capital': 10_000, 'risk': .01, 'fee_bps': 10, 'maker_bps': 10, 'spread_bps': 2,
             'slippage_bps': 2, 'ambiguity': 'stop', 'reversal': .006, 'target_multiple': 1.618,
             'stop_buffer': .001, 'trend_stop': .02, 'lookback': 20, 'hurst_min': None,
-            'speed_min': .8, 'embargo': 3, 'walk_folds': 3, 'seed': 73,
+            'speed_min': None, 'embargo': 3, 'walk_folds': 3, 'seed': 73,
             'use_fibonacci': True, 'holdout': .2, 'order_type': 'market',
-            'wave_duration_min': 2, 'score_weights': [1, 1, 1, 1, 1]}
+            'wave_duration_min': 0, 'score_weights': [1, 1, 1, 1, 1]}
 MODELS = ('A', 'B', 'C', 'D', 'Buy and Hold', 'Médias móveis', 'D sem filtro de velocidade')
 
 
