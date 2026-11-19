@@ -1,0 +1,70 @@
+{
+  "data": "SIMULAÇÃO SINTÉTICA (NÃO DADOS REAIS)",
+  "start_utc": "2026-10-01 00:00:00+00:00",
+  "end_utc": "2026-10-04 11:19:00+00:00",
+  "bars": 5000,
+  "calendar_minutes": 4999.0,
+  "information_minutes": 5179.726217942474,
+  "speed_mean": 1.036145243588493,
+  "speed_min": 0.48408936474670117,
+  "speed_max": 2.184690897390122,
+  "hursts_by_scale": {
+    "curta (1–13)": {
+      "H_calendar": 0.60414,
+      "H_information": 0.63254,
+      "R2_calendar": 0.99813,
+      "R2_information": 0.99884
+    },
+    "média (3–34)": {
+      "H_calendar": 0.66423,
+      "H_information": 0.6767,
+      "R2_calendar": 0.99878,
+      "R2_information": 0.99917
+    },
+    "longa (8–89)": {
+      "H_calendar": 0.65762,
+      "H_information": 0.66265,
+      "R2_calendar": 0.99598,
+      "R2_information": 0.9958
+    }
+  },
+  "fib_impulse_candidates_detected_top5": [
+    {
+      "pivot_indices": [
+        2123,
+        2219,
+        2283,
+        2395,
+        2457,
+        2552
+      ],
+      "known_at": 2566,
+      "score": 0.8460714042075607,
+      "ratios": [
+        0.6918263051722705,
+        1.5212560574814062,
+        0.2907153466301581,
+        1.0127839628772253
+      ]
+    },
+    {
+      "pivot_indices": [
+        1333,
+        1416,
+        1504,
+        1644,
+        1742,
+        1833
+      ],
+      "known_at": 1858,
+      "score": 0.7062545257633599,
+      "ratios": [
+        0.918855543147268,
+        1.3593350875925916,
+        0.2977042784689005,
+        0.879393347614551
+      ]
+    }
+  ],
+  "important_note": "Activity-derived informational clock; NOT direct news entropy. Hurst local-fit R² is descriptive, not out-of-sample predictive performance. Fibonacci impulse detection requires reversal confirmation."
+}
