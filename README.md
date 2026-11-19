@@ -2,6 +2,12 @@
 
 Implementação reprodutível de um **teste de hipótese**, não de um sistema comprovado de previsão financeira.
 
+## Deploy no Vercel
+
+Importe o repositório com o **Root Directory** na raiz. O `vercel.json` publica os arquivos de `demo_output/` como site estático e abre o painel interativo de demonstração em `/`.
+
+Para atualizar o painel publicado, execute `python modelo.py --out demo_output` e faça commit dos arquivos gerados que deseja publicar.
+
 ## Instalação e execução
 
 ```bash
