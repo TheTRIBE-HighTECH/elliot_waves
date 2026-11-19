@@ -2,12 +2,20 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "",
-  "outputDirectory": "demo_output",
+  "buildCommand": "node backtest/build.mjs",
+  "outputDirectory": ".site",
   "rewrites": [
     {
       "source": "/",
       "destination": "/PAINEL_INTERATIVO.html"
+    },
+    {
+      "source": "/backtest/",
+      "destination": "/backtest/index.html"
+    },
+    {
+      "source": "/backtest/binance/:path*",
+      "destination": "https://data.binance.vision/data/spot/:path*"
     }
   ]
 }

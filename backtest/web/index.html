@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backtest | Elliott–Fibonacci</title>
+  <link rel="stylesheet" href="/backtest/style.css">
+  <script defer src="/backtest/plotly.js"></script>
+  <script defer src="/backtest/ui.js"></script>
+</head>
+<body>
+  <nav aria-label="Navegação principal"><a href="/">Painel</a><a href="/backtest/" aria-current="page">Backtest</a></nav>
+  <main>
+    <h1>Backtest Elliott–Fibonacci</h1>
+    <p>Mercado spot. As métricas principais usam o período final fora da amostra.</p>
+    <form id="experiment">
+      <fieldset>
+        <legend>Dados históricos</legend>
+        <label>Ativo <select name="symbol"><option>BTCUSDT</option><option>ETHUSDT</option><option>SOLUSDT</option></select></label>
+        <label>Timeframe <select name="interval"><option>1m</option><option>5m</option><option>15m</option><option selected>1h</option><option>4h</option><option>1d</option></select></label>
+        <label>Início (UTC) <input type="date" name="start" value="2025-01-01" required></label>
+        <label>Fim inclusivo (UTC) <input type="date" name="end" value="2025-03-31" required></label>
+        <label>CSV local (opcional) <input type="file" id="csv" accept=".csv,text/csv"></label>
+        <p>Sem CSV, são usados arquivos públicos da Binance. Trades, volume e desequilíbrio são proxies de atividade informacional.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Estratégia e execução</legend>
+        <label>Capital inicial <input name="capital" type="number" min="1" value="10000" required></label>
+        <label>Risco por operação (%) <input name="risk" type="number" min=".01" max="20" step=".01" value="1" required></label>
+        <label>Reversão de pivô (%) <input name="reversal" type="number" min=".01" max="50" step=".01" value=".6" required></label>
+        <label>Projeção do alvo <input name="target_multiple" type="number" min=".1" max="10" step=".001" value="1.618" required></label>
+        <label>Hurst mínimo (opcional) <input name="hurst_min" type="number" min="0" max="1" step=".01"></label>
+        <label>Velocidade mínima de D <input name="speed_min" type="number" min=".35" max="3.5" step=".01" value=".8"></label>
+        <label>Duração mínima do impulso (unidades do relógio) <input name="wave_duration_min" type="number" min="0" max="25" step=".1" value="2" required></label>
+        <label>Ordem de entrada <select name="order_type"><option value="market">Mercado</option><option value="limit">Limite passiva</option></select></label>
+        <label>Taxa maker (bps) <input name="maker_bps" type="number" min="0" max="500" step=".1" value="10" required></label>
+        <label>Taxa taker (bps) <input name="fee_bps" type="number" min="0" max="500" step=".1" value="10" required></label>
+        <label>Spread (bps) <input name="spread_bps" type="number" min="0" max="500" step=".1" value="2" required></label>
+        <label>Slippage (bps) <input name="slippage_bps" type="number" min="0" max="500" step=".1" value="2" required></label>
+        <label>Stop e alvo no mesmo candle <select name="ambiguity"><option value="stop">Executar stop</option><option value="target">Executar alvo</option></select></label>
+        <label>Pesos do score geométrico <input name="score_weights" value="1, 1, 1, 1, 1" required></label>
+        <label>Embargo (candles) <input name="embargo" type="number" min="0" max="100" value="3" required></label>
+        <label>Janelas walk-forward <input name="walk_folds" type="number" min="1" max="6" value="3" required></label>
+        <p>Pesos na ordem: Fibonacci, estrutura, duração, Hurst e atraso de confirmação.</p>
+      </fieldset>
+      <button id="run">Executar backtest</button> <button type="button" id="cancel" hidden>Cancelar</button>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section id="results" hidden>
+      <h2>Comparação fora da amostra</h2>
+      <p>A · fractal livre cronológico. B · fractal livre informacional. C · Elliott–Fibonacci cronológico. D · Elliott–Fibonacci informacional.</p>
+      <p id="sample"></p>
+      <button id="export">Exportar experimento em JSON</button>
+      <label class="filter">Exibição <select id="mode"><option value="net">Líquida</option><option value="gross">Bruta</option></select></label>
+      <div class="scroll"><table id="metrics"></table></div>
+      <h2>Validação estatística</h2>
+      <div id="science"></div>
+      <details><summary>Score geométrico e componentes</summary><pre id="geometry"></pre></details>
+      <details><summary>Walk-forward, sensibilidade e ablações</summary><pre id="details"></pre></details>
+      <h2>Gráficos interativos</h2>
+      <label class="filter">Modelo para operações <select id="chart-model"></select></label>
+      <div id="plots"></div>
+      <h2>Operações fora da amostra</h2>
+      <div class="scroll"><table id="trades"></table></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+:root { color-scheme: light; font: 16px system-ui, sans-serif; color: #172b45; background: #f5f8fc; }
+body { margin: 0; }
+nav { display: flex; gap: 1.5rem; padding: 1rem max(1rem, calc((100vw - 1200px)/2)); background: white; border-bottom: 1px solid #d9e1eb; }
+nav a { color: #1d4ed8; text-decoration: none; }
+nav a[aria-current] { font-weight: 700; border-bottom: 2px solid; }
+main { max-width: 1200px; margin: auto; padding: 1rem; }
+fieldset { border: 1px solid #cbd5e1; background: white; border-radius: .5rem; margin: 1rem 0; padding: 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); }
+legend { font-weight: 700; padding: .25rem; }
+fieldset p { grid-column: 1/-1; margin: 0; }
+label { display: grid; gap: .35rem; font-size: .875rem; }
+input, select, button { font: inherit; padding: .5rem; border: 1px solid #a9b7cb; border-radius: .35rem; min-width: 0; }
+button { background: #1d4ed8; color: white; cursor: pointer; }
+button:disabled { opacity: .65; cursor: wait; }
+.filter { display: inline-grid; margin: 1rem .5rem; }
+.scroll { overflow: auto; max-height: 32rem; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; background: white; font-size: .875rem; }
+td, th { padding: .45rem .6rem; text-align: right; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+th { background: #edf3fa; }
+td:first-child, th:first-child { text-align: left; }
+#plots > div { min-height: 370px; margin: 1rem 0; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow: auto; }
