@@ -13,7 +13,7 @@ from .engine import execute
 from .statistics import block_ci, conclusion, geometry_scores, metrics
 from .strategy import pivot_events, signals, trailing_hurst
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 DEFAULTS = {'capital': 10_000, 'risk': .01, 'fee_bps': 10, 'maker_bps': 10, 'spread_bps': 2,
             'slippage_bps': 2, 'ambiguity': 'stop', 'reversal': .006, 'target_multiple': 1.618,
             'stop_buffer': .001, 'trend_stop': .02, 'lookback': 20, 'hurst_min': None,
@@ -236,7 +236,8 @@ def run(frame, provenance, options, progress=lambda *_: None):
                                   ('baixa_volatilidade', (~high_regime) & np.isfinite(vol[start:stop]))]}
     audit = {model: [{'signal_index': i, 'confirmed_close_utc':
                       (candles.timestamp.iloc[i] + np.timedelta64(seconds, 's')).isoformat(),
-                      'tradable_index': i + 1, 'stop': order[0], 'target': order[1], 'reason': order[2]}
+                      'tradable_index': i + 1, 'stop': order[0], 'target': order[1], 'reason': order[2],
+                      'breakout': order[3] if len(order) > 3 else None}
                      for i, order in entries[model].items()] for model in MODELS}
     for replay_result in results.values():
         for trade in replay_result['trades']:

@@ -36,7 +36,7 @@ def execute(candles, signals, start, stop, config, hold=False):
         if hold and i == start:
             pending = (0, float('inf'), 'buy_hold')
         if pending:
-            stop_price, target, reason = pending
+            stop_price, target, reason, *breakout_level = pending
             passive = not hold and config['order_type'] == 'limit'
             limit = ohlc[i - 1, 3] if passive else None
             raw = limit if passive else opening
@@ -48,6 +48,8 @@ def execute(candles, signals, start, stop, config, hold=False):
                 order['status'] = 'posição_aberta'
             elif passive and not low < limit < opening:
                 order['status'] = 'limite_não_executado'
+            elif breakout_level and raw <= breakout_level[0]:
+                order['status'] = 'abaixo_do_rompimento'
             elif not stop_price < raw <= fill < target:
                 order['status'] = 'preço_fora_dos_limites'
             else:

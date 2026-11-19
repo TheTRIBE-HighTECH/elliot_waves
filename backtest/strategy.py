@@ -63,16 +63,31 @@ def signals(model, candles, axis, h, waves, config):
     speed = candles.clock_speed.to_numpy()
     result = {}
     if model in ('C', 'D'):
-        for i, (correction, start, top, ratio) in waves.items():
-            if axis[correction] - axis[start] < config['wave_duration_min']:
+        high = candles.high.to_numpy()
+        low = candles.low.to_numpy()
+        setup = None
+        for i in range(1, len(close)):
+            if i in waves:
+                correction, start, top, ratio = waves[i]
+                setup = None
+                if axis[correction] - axis[start] >= config['wave_duration_min'] and (
+                        not config['use_fibonacci'] or .382 <= ratio <= .786):
+                    breakout = float(np.max(high[start:top + 1]))
+                    floor = low[correction]
+                    stop = floor * (1 - config['stop_buffer'])
+                    multiple = config['target_multiple'] if config['use_fibonacci'] else 1.0
+                    target = close[correction] + multiple * (close[top] - close[start])
+                    if target > breakout and np.min(low[correction + 1:i + 1]) >= floor:
+                        setup = (breakout, floor, stop, target)
+            if setup is None:
                 continue
-            if config['use_fibonacci'] and not .382 <= ratio <= .786:
-                continue
-            stop = candles.low.iloc[correction] * (1 - config['stop_buffer'])
-            multiple = config['target_multiple'] if config['use_fibonacci'] else 1.0
-            target = close[correction] + multiple * (close[top] - close[start])
-            if stop < close[i] < target:
-                result[i] = (float(stop), float(target), 'onda_3')
+            breakout, floor, stop, target = setup
+            if low[i] < floor:
+                setup = None
+            elif close[i - 1] <= breakout < close[i]:
+                if close[i] < target:
+                    result[i] = (float(stop), float(target), 'onda_3_rompimento', breakout)
+                setup = None
     else:
         lookback = config['lookback']
         starts = np.searchsorted(axis, axis - lookback, side='right') - 1

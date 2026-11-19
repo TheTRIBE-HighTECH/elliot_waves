@@ -6,7 +6,7 @@ import pandas as pd
 from backtest.data import archive_paths, prepare
 from backtest.engine import execute
 from backtest.experiment import DEFAULTS, run, splits
-from backtest.strategy import pivot_events, trailing_hurst
+from backtest.strategy import pivot_events, signals, trailing_hurst
 from modelo import information_clock
 
 
@@ -29,6 +29,29 @@ class InitiationTests(unittest.TestCase):
         for i in range(2, len(prices)):
             prefix, _ = pivot_events(prices[:i], .025)
             self.assertEqual(prefix, [e for e in events if e['confirmed'] < i])
+
+    def test_wave3_requires_a_confirmed_closing_breakout(self):
+        frame = pd.DataFrame({
+            'close': [100, 119, 110, 113, 120, 122, 125],
+            'high': [101, 120, 116, 114, 121, 123, 126],
+            'low': [99, 118, 109, 111, 115, 121, 123],
+            'clock_speed': 1.0,
+        })
+        axis = np.arange(len(frame))
+        waves = {3: (2, 0, 1, .5)}
+        config = {**DEFAULTS, 'wave_duration_min': 0}
+        entries = signals('C', frame, axis, axis, waves, config)
+        self.assertEqual(list(entries), [5])
+        self.assertEqual(entries[5][3], 120)
+        self.assertEqual(signals('C', frame.iloc[:5], axis[:5], axis[:5], waves, config), {})
+        frame.loc[5, 'low'] = 108
+        self.assertEqual(signals('C', frame, axis, axis, waves, config), {})
+        frame.loc[5, ['low', 'open']] = [111, 118]
+        frame['open'] = frame['open'].fillna(frame.close)
+        entries = signals('C', frame, axis, axis, waves, config)
+        frame.loc[6, 'open'] = 119
+        result = execute(frame, entries, 0, len(frame), config)
+        self.assertEqual(result['orders'][0]['status'], 'abaixo_do_rompimento')
 
     def test_information_clock_initial_and_prefix_invariance(self):
         frame = bars(500)
