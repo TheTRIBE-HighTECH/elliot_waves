@@ -96,7 +96,11 @@ function showScience() {
   const {science} = result;
   const target = byId('science');
   const interval = (value) => value?.map(display).join(' a ') || 'amostra insuficiente';
+  const elliott = science.elliott_comparison;
   const summaries = [
+    `C × D · ${elliott.shared_signals} sinais em comum, ${elliott.only_c} só em C e ${elliott.only_d} só em D.`
+      + (elliott.identical_trades && elliott.identical_equity
+        ? ' As operações e a curva de patrimônio foram idênticas nesta amostra.' : ''),
     'H1 · Dispersão relativa das durações: ' + science.H1.status + '. IC 95%: ' + interval(science.H1.interval95) + '.',
     'H2 · Geometria: ' + science.H2.status + '. ' + science.H2.reason,
     'H3 · Diferença de retorno diário líquido de D frente aos controles.',

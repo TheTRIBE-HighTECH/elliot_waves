@@ -13,7 +13,7 @@ from .engine import execute
 from .statistics import block_ci, conclusion, geometry_scores, metrics
 from .strategy import pivot_events, signals, trailing_hurst
 
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 DEFAULTS = {'capital': 10_000, 'risk': .01, 'fee_bps': 10, 'maker_bps': 10, 'spread_bps': 2,
             'slippage_bps': 2, 'ambiguity': 'stop', 'reversal': .006, 'target_multiple': 1.618,
             'stop_buffer': .001, 'trend_stop': .02, 'lookback': 20, 'hurst_min': None,
@@ -253,6 +253,17 @@ def run(frame, provenance, options, progress=lambda *_: None):
             # Consecutive H windows share 240 of 256 bars. Preserve at least 16 sampled windows.
             bands[band] = {'observations': len(values), 'interval95_mean': block_ci(values, 16, config['seed'])}
         hurst_uncertainty[clock] = bands
+    elliott_signals = {model: {i: order for i, order in entries[model].items()
+                               if start <= i < stop} for model in ('C', 'D')}
+    c_signals, d_signals = elliott_signals['C'], elliott_signals['D']
+    elliott_comparison = {
+        'shared_signals': len(c_signals.keys() & d_signals.keys()),
+        'only_c': len(c_signals.keys() - d_signals.keys()),
+        'only_d': len(d_signals.keys() - c_signals.keys()),
+        'identical_signals': c_signals == d_signals,
+        'identical_trades': results['C']['trades'] == results['D']['trades'],
+        'identical_equity': results['C']['equity'] == results['D']['equity'],
+    }
     run_id = hashlib.sha256(json.dumps([VERSION, provenance['sha256'], config], sort_keys=True).encode()).hexdigest()
     return clean({'run_id': run_id, 'version': VERSION, 'config': config, 'data': provenance,
                   'stages': stages, 'segments': split, 'selected_settings': selected_settings, 'validation': validation,
@@ -262,7 +273,7 @@ def run(frame, provenance, options, progress=lambda *_: None):
                              'ohlc': candles[['open', 'high', 'low', 'close']].to_numpy().tolist(),
                              'hurst': spectra, 'stability': stability},
                   'geometry_score': geometry_scores(events, axes, h, train_end, start, config['score_weights']),
-                  'science': {'hurst_uncertainty': hurst_uncertainty, 'H1': {'sample': len(h1_values), 'interval95': h1_ci, 'status': conclusion(h1_ci)},
+                  'science': {'elliott_comparison': elliott_comparison, 'hurst_uncertainty': hurst_uncertainty, 'H1': {'sample': len(h1_values), 'interval95': h1_ci, 'status': conclusion(h1_ci)},
                               'H2': {'status': 'inconclusivo', 'reason': 'Os mesmos pivôs preservam razões de preço sob reparametrização.'},
                               'H3': comparisons, 'predictive_labels': predictive, 'days': len(test_returns), 'cost_sensitivity': sensitivity,
                               'ablations': ablations, 'regimes': regimes,
