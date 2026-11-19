@@ -4,9 +4,34 @@ Implementação reprodutível de um **teste de hipótese**, não de um sistema c
 
 ## Deploy no Vercel
 
-Importe o repositório com o **Root Directory** na raiz. O `vercel.json` publica os arquivos de `demo_output/` como site estático e abre o painel interativo de demonstração em `/`.
+Importe o repositório com o **Root Directory** na raiz. O build estático monta o painel interativo em `/` e a aba de pesquisa em `/backtest/`. O Vercel encaminha as solicitações de arquivos históricos ao domínio público da Binance.
 
 Para atualizar o painel publicado, execute `python modelo.py --out demo_output` e faça commit dos arquivos gerados que deseja publicar.
+
+## Backtest spot
+
+Em **Backtest**, escolha BTCUSDT, ETHUSDT ou SOLUSDT, selecione um intervalo de 1m a 1d e informe as datas UTC inclusivas. O formulário baixa arquivos mensais ou diários da Binance. Também aceita um CSV com `timestamp,open,high,low,close,volume,quote_volume,num_trades,taker_buy_volume`. O período selecionado deve estar completo, sem duplicidades, e tem limite de 100.000 candles. Timestamps representam a abertura da vela. A fonte e os hashes dos arquivos e da amostra canônica ficam no JSON exportado.
+
+O motor Python roda em um Web Worker via Pyodide. O navegador precisa de acesso ao CDN do Pyodide durante a inicialização. A execução pode ser cancelada e o JSON exportado contém ID, parâmetros, versão, proveniência, sinais, ordens, trades, saldos, patrimônio, métricas da validação e logs dos estágios. Não há fila de jobs ou persistência no servidor. Exporte o JSON para arquivar a execução. Use a CLI para executar fora do navegador:
+
+```bash
+python -m pip install -r requirements.txt
+python -m backtest.experiment --symbol BTCUSDT --interval 1h \
+  --start 2025-01-01 --end 2025-06-30 --out btc-backtest.json
+python -m unittest -v
+node backtest/build.mjs
+```
+
+A CLI aceita `--csv` e `--options` (arquivo JSON com ajustes descritos em `backtest/experiment.py`). O build precisa de Node.js e gera `.site/`.
+
+### Execução e comparação
+
+- Os modelos A/B usam cruzamentos de momento em janelas de duração equivalentes nos respectivos relógios como controle sem geometria Elliott. C/D usam a entrada na possível onda 3, com retração de 0,382–0,786 em log-preço, limiar configurável do pivô, stop abaixo da mínima da vela do pivô e projeção de 1,618 da amplitude em preço. A duração mínima da onda 1–2 é medida no relógio de cada modelo. D pode usar o filtro adicional de velocidade. O filtro de Hurst é opcional em todos os quatro modelos.
+- O relógio reutiliza a transformação exponencial e os z-scores retrospectivos do projeto. Intensidade de trades, volume e desequilíbrio são proxies de atividade. As bandas Fibonacci do Hurst são avaliadas em unidades de um candle nominal, em janelas causais de 256 barras amostradas a cada 16 barras.
+- O sinal só surge no fechamento que confirma o pivô. A ordem a mercado utiliza a abertura seguinte, spread e slippage de cada lado, mais taxa taker. A alternativa maker fica pelo próximo candle no fechamento anterior, exige abertura acima da ordem e mínima abaixo dela, e expira sem execução se não houver cruzamento. Se a entrada maker e o alvo ocorrerem no mesmo candle, o alvo só é elegível no candle posterior. O stop pressupõe execução nessa vela se atravessado. Para ordens a mercado, a política padrão quando stop e alvo são atingidos na mesma vela é stop primeiro. Em gaps de saída a execução parte da abertura. Custos e risco até o stop entram no dimensionamento inicial, mas gaps podem exceder o risco de 1%. O bruto preserva as quantidades e os preços de referência da simulação líquida. O mercado spot opera comprado e mantém uma posição por vez.
+- Os modelos usam as mesmas janelas, tamanho de grade, condições de execução e custos. A seleção é feita por retorno líquido menos drawdown máximo no treino. Validação e teste usam parâmetros congelados. As janelas walk-forward ficam no período de desenvolvimento, antes do teste final. Cada janela refaz a seleção com dados anteriores e o embargo configurado. Nenhuma posição ou ordem cruza os limites de um segmento.
+- Os testes reportam dispersão relativa das durações do mesmo conjunto de impulsos (H1) e diferença de retornos diários líquidos de D frente aos controles (componente econômico de H3). A precisão direcional a cinco barras é descritiva, usa sinais completos e evita janelas sobrepostas. Os intervalos de confiança usam bootstrap em blocos e podem ficar indisponíveis para amostras curtas. As razões de preço dos mesmos pivôs são invariantes à mudança de eixo. H2 permanece inconclusiva até que um detector multiescala independente faça a identificação de padrões em cada relógio.
+- O score geométrico exibe cinco componentes brutos e percentis calibrados exclusivamente no treino. É uma medida descritiva, sem interpretação probabilística. A variante ABC implementa somente a correção simples após um impulso confirmado. A soma fractal da proposta, subondas recursivas e futuros não fazem parte desta versão. Evite interpretar os Sharpe e Sortino anualizados como testes de significância, especialmente para janelas curtas.
 
 ## Instalação e execução
 
