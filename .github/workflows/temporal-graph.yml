@@ -1,0 +1,44 @@
+name: Temporal social information graph neural ablation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'research/hn_graph.py'
+      - 'research/graph_fusion.py'
+      - 'research/test_graph.py'
+      - '.github/workflows/temporal-graph.yml'
+permissions:
+  contents: read
+jobs:
+  graph-neural-ablation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific dependencies
+        run: pip install -r research/requirements.txt
+      - name: Verify graph causality and real parent edges
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_graph.py' -v
+      - name: Download real Bitcoin OHLCV
+        run: python research/download_binance.py --symbols BTCUSDT --start 2024-01 --end 2025-12 --out research/datasets
+      - name: Collect historic real social reply graph (Bitcoin, Ethereum, crypto)
+        run: python research/hn_graph.py --start 2024-01 --end 2025-12 --per-topic-per-month 8 --out research/graph_data
+      - name: Train shared-weight graph neural detector with four ablations
+        run: python research/graph_fusion.py --csv research/datasets/BTCUSDT_1h.csv --nodes research/graph_data/hn_nodes.csv --epochs 8 --out research/graph_runs
+      - name: Collect COVID-19 case-study graph (Jan-Jun 2020; no price model claims)
+        run: python research/hn_graph.py --start 2020-01 --end 2020-06 --topics covid coronavirus pandemic --per-topic-per-month 6 --out research/covid_2020_graph
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: temporal-graph-results-${{ github.run_id }}
+          path: |
+            research/graph_data/
+            research/graph_runs/
+            research/covid_2020_graph/
+          retention-days: 30
+          if-no-files-found: warn
