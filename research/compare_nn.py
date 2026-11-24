@@ -259,11 +259,13 @@ def backtest(df,indices,probs,cost_bps=13.):
     cash=10000.;qty=0.;entry=0.;ntr=0;positive=negative=0.
     curve=[];peak=10000.;dd=0.
     start=int(indices[0]);end=int(indices[-1]);fee=cost_bps/10000.
+    last_desire=False
     for i in range(start,end+1):
         desired=bool(mapping.get(i-1,False))
         # Hold the last decision until the next sampled signal: otherwise
         # non-sampled candles would force an exit and distort the benchmark.
-        if i>start and i-1 not in mapping:desired=bool(mapping.get(max((j for j in mapping if j<i),default=start-1),False))
+        if i>start and i-1 not in mapping:desired=last_desire
+        if i-1 in mapping:last_desire=desired
         px=float(df.open.iloc[i])
         if qty and not desired:
             cash=qty*px*(1-fee);pnl=cash-entry
@@ -285,20 +287,20 @@ def backtest(df,indices,probs,cost_bps=13.):
 def run(args):
     seed_everything(args.seed);df=read_candles(args.csv)
     t=df.timestamp
-    train=int(t.searchsorted(pd.Timestamp("2025-01-01",tz="UTC")))
+    train_end=int(t.searchsorted(pd.Timestamp("2025-01-01",tz="UTC")))
     test=int(t.searchsorted(pd.Timestamp("2025-07-01",tz="UTC")))
-    if train<600 or test-train<500 or len(df)-test<500:
+    if train_end<600 or test-train_end<500 or len(df)-test<500:
         raise ValueError("Need complete 2024/2025 history for locked split")
     close=df.close.to_numpy()
-    labels=expert_labels(args.labels,df) if args.labels else label_blocks(df,train,test)
+    labels=expert_labels(args.labels,df) if args.labels else label_blocks(df,train_end,test)
     source="expert_verified" if args.labels else "RETROSPECTIVE_WEAK_SWING_LABELS"
-    rev=future_reversal(df,train,test)
+    rev=future_reversal(df,train_end,test)
     cal=np.arange(len(df),dtype=float)
     info,speed=information_clock(df.volume.to_numpy(),args.alpha)
     assert np.all(np.diff(info)>0)
     indices={
-        "train":np.arange(400,train-24,12),
-        "validation":np.arange(train+48,test-24,12),
+        "train":np.arange(400,train_end-24,12),
+        "validation":np.arange(train_end+48,test-24,12),
         "test":np.arange(test+48,len(df)-9,12),
     }
     paired={}
@@ -315,7 +317,7 @@ def run(args):
     reports={};candidates={}
     for name in ("mlp","tcn_single","tcn_multi","gru_multi"):
         print("training",name,flush=True)
-        model=train_model=factory(name)
+        model=factory(name)
         model=train(model,x,y,ry,xv,yv,rv,epochs=args.epochs,seed=args.seed)
         avp=predict(model,av);bvp=predict(model,bv)
         am=predict(model,at);bm=predict(model,bt)
