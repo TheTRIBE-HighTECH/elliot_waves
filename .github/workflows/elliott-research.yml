@@ -31,7 +31,8 @@ jobs:
       - name: Test annotation and collector schema
         run: |
           python -m compileall -q research
-          python -m unittest discover -s research -p 'test_*.py' -v
+          python -m unittest discover -s research -p 'test_research.py' -v
+          python -m unittest discover -s research -p 'test_temporal_graph.py' -v
 
   snapshot-smoke:
     if: github.event_name == 'pull_request'
