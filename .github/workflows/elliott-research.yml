@@ -1,0 +1,89 @@
+name: Elliott counts archive and model research
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      train:
+        description: 'Train/evaluate candidate neural models using real OHLCV'
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - 'research/**'
+      - '.github/workflows/elliott-research.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test annotation and collector schema
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -v
+
+  snapshot-smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify live Atlas index and three market snapshots
+        run: python research/atlas_snapshots.py --out research/snapshots --max-markets 3 --spacing 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-snapshot-smoke-${{ github.run_id }}
+          path: research/snapshots/
+          retention-days: 30
+
+  daily-snapshot:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.train)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Collect daily provider calls
+        run: python research/atlas_snapshots.py --out research/snapshots --max-markets 100 --spacing 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-calls-${{ github.run_id }}
+          path: research/snapshots/
+          retention-days: 30
+          if-no-files-found: error
+
+  train-and-benchmark:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.train)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific dependencies
+        run: pip install -r research/requirements.txt
+      - name: Download historical BTC/USDT data (2024-2025)
+        run: python research/download_binance.py --symbols BTCUSDT ETHUSDT SOLUSDT AVAXUSDT ADAUSDT LINKUSDT MANAUSDT HBARUSDT DOTUSDT XRPUSDT SUIUSDT --start 2024-01 --end 2025-12 --out research/datasets
+      - name: Compare candidate networks on identical chronological splits
+        run: for asset in BTCUSDT ETHUSDT SOLUSDT AVAXUSDT ADAUSDT LINKUSDT MANAUSDT HBARUSDT DOTUSDT XRPUSDT SUIUSDT; do python research/compare_nn.py --csv research/datasets/${asset}_1h.csv --epochs 6 --out research/runs/${asset}; done
+      - name: Rank candidate architectures across assets using validation only
+        run: python research/rank_models.py research/runs/{BTCUSDT,ETHUSDT,SOLUSDT,AVAXUSDT,ADAUSDT,LINKUSDT,MANAUSDT,HBARUSDT,DOTUSDT,XRPUSDT,SUIUSDT}/report.json --out research/runs/ranking.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elliott-model-benchmark-${{ github.run_id }}
+          path: research/runs/
+          retention-days: 30
+          if-no-files-found: error
