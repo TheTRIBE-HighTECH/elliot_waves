@@ -32,7 +32,7 @@ python research/hn_reply_graph.py \
   --assets BTCUSDT --start 2024-01 --end 2025-12 \
   --stories-month 3 --max-nodes-story 200 --out research/datasets/hn_graph
 
-python research/graph_fusion.py \
+python research/graph_message_passing.py \
   --csv research/datasets/BTCUSDT_1h.csv \
   --events research/datasets/hn_graph/hn_reply_events.csv \
   --asset BTCUSDT --epochs 8 --out research/runs/graph_fusion_BTC
