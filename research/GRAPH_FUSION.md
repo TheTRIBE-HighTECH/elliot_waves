@@ -35,7 +35,7 @@ python research/hn_reply_graph.py \
 python research/graph_message_passing.py \
   --csv research/datasets/BTCUSDT_1h.csv \
   --events research/datasets/hn_graph/hn_reply_events.csv \
-  --asset BTCUSDT --epochs 8 --out research/runs/graph_fusion_BTC
+  --asset BTCUSDT --clock-source graph --epochs 8 --out research/runs/graph_fusion_BTC
 ```
 
 COVID-19 (independent event-graph collection, not yet paired with equities):
@@ -113,3 +113,5 @@ information propagation, social contagion, actual investor beliefs, or a
 Fibonacci mechanism. It cannot by itself establish a relation between social
 branching and price moves. That requires better event coverage, independent
 wave labels, negative controls and statistical testing.
+
+Graph-clock option: `--clock-source graph` (default) integrates counts from actual reply-tree events to drive time distortion; `--clock-source volume` is the prior volume-only control. No data at time t can include messages with creation times after the close of candle t.
