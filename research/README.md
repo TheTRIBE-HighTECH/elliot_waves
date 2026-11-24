@@ -25,18 +25,18 @@ Research branch; the existing production app and `modelo.py` remain unchanged.
 * HF `usamaahmedsh/elliott-wave-market-data-complete`: OHLCV from multiple
   markets; its page gives inconsistent row totals and its parquet viewer may
   error. Audit physical files before using, never presume row count.
-* Binance Vision: primary initial real spot OHLCV for BTCUSDT/ETHUSDT/SOLUSDT.
+* Binance Vision: primary initial real spot OHLCV for 11 reference crypto pairs (BTC, ETH, SOL, AVAX, ADA, LINK, MANA, HBAR, DOT, XRP, SUI).
   From 2025 spot timestamps may be microseconds; the downloader handles both.
 
 ## Run locally
 
 ```bash
 python -m pip install -r research/requirements.txt
-python research/download_binance.py --symbols BTCUSDT ETHUSDT SOLUSDT --start 2024-01 --end 2025-12 --out research/datasets
-for asset in BTCUSDT ETHUSDT SOLUSDT; do
+python research/download_binance.py --symbols BTCUSDT ETHUSDT SOLUSDT AVAXUSDT ADAUSDT LINKUSDT MANAUSDT HBARUSDT DOTUSDT XRPUSDT SUIUSDT --start 2024-01 --end 2025-12 --out research/datasets
+for asset in BTCUSDT ETHUSDT SOLUSDT AVAXUSDT ADAUSDT LINKUSDT MANAUSDT HBARUSDT DOTUSDT XRPUSDT SUIUSDT; do
   python research/compare_nn.py --csv research/datasets/${asset}_1h.csv --epochs 6 --out research/runs/${asset}
 done
-python research/rank_models.py research/runs/BTCUSDT/report.json research/runs/ETHUSDT/report.json research/runs/SOLUSDT/report.json --out research/runs/ranking.json
+python research/rank_models.py research/runs/{BTCUSDT,ETHUSDT,SOLUSDT,AVAXUSDT,ADAUSDT,LINKUSDT,MANAUSDT,HBARUSDT,DOTUSDT,XRPUSDT,SUIUSDT}/report.json --out research/runs/ranking.json
 ```
 
 Model comparison: MLP, single-scale TCN, multiscale TCN (Fibonacci
