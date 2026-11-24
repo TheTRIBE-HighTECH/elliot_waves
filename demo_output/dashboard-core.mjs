@@ -205,7 +205,7 @@ export function normalizePredictions(rows){
           rev=Number(val(row,'p_reversal')??NaN),
           conf=Number(val(row,'confidence')??NaN);
     const hash=String(val(row,'weight_sha256','weights_sha256')??'');
-    if(!isNum(t)||!isNum(known)||![p,rev,conf].every(v=>isNum(v)&&v>=0&&v<=1)||hash.length<8)continue;
+    if(!isNum(t)||!isNum(known)||![p,rev,conf].every(v=>isNum(v)&&v>=0&&v<=1)||!/^[a-f0-9]{64}$/i.test(hash))continue;
     if(known<t)continue; // deterministic close or later, no retroactive signals
     out[key].set(t,{known,p,rev,conf,hash});
     hashes[key].add(hash);
