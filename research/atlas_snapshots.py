@@ -25,7 +25,7 @@ def collect(folder, max_markets=100, spacing=1., include_full=True):
     folder=pathlib.Path(folder)
     now=dt.datetime.now(dt.timezone.utc)
     day=now.strftime("%Y-%m-%d")
-    target=folder/day
+    target=folder/day/now.strftime("%H%M%SZ")
     target.mkdir(parents=True,exist_ok=True)
     index=read_json("/data/index.json")
     markets=index.get("markets",[])
@@ -46,7 +46,7 @@ def collect(folder, max_markets=100, spacing=1., include_full=True):
             digest=hashlib.sha256(raw).hexdigest()
             # One file per capture UTC day, no overwriting an existing same-day capture.
             dest=target/(slug+".json")
-            if not dest.exists(): dest.write_bytes(raw)
+            dest.write_bytes(raw)
             statuses.append({
               "symbol":full.get("symbol"),"slug":slug,"asof":full.get("asof"),
               "retrieved_utc":now.isoformat(),"sha256":digest,
