@@ -70,9 +70,9 @@ test('Hurst returns a descriptive estimate with historical-only windows',()=>{
 test('Predictions require both timestamps and do not accept retroactive availability',()=>{
   const begin='2025-01-01T00:00:00Z';
   const result=normalizePredictions([{clock:'calendar',timestamp:begin,known_at:'2024-12-31T23:00:00Z',
-     p_bull_3:'1',p_reversal:'0',confidence:'1',weight_sha256:'12345678'},
+     p_bull_3:'1',p_reversal:'0',confidence:'1',weight_sha256:'a'.repeat(64)},
     {clock:'calendar',timestamp:begin,known_at:'2025-01-01T01:00:00Z',
-     p_bull_3:'.6',p_reversal:'.3',confidence:'.9',weight_sha256:'12345678'}]);
+     p_bull_3:'.6',p_reversal:'.3',confidence:'.9',weight_sha256:'a'.repeat(64)}]);
   assert.equal(result.series.calendar.size,1);
 });
 test('Two equal predictions and the same costs yield equal trades and returns',()=>{
