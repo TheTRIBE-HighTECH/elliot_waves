@@ -206,6 +206,7 @@ function refreshSources(){
   ].join('\n'));
   setText('marketCount',state.bars.length.toLocaleString('pt-BR')+' candles');
   setText('datasetTag',state.synthetic?'DEMONSTRAÇÃO SINTÉTICA':'OHLCV REAL · IMPORTADO');
+  setText('modeBadge',state.synthetic?'SIMULAÇÃO · NÃO É PREVISÃO':'DADOS REAIS · PESQUISA');
   setText('graphStatus',graphNodes?'GRAFO REAL IMPORTADO':'SEM GRAFO');
   setText('neuralStatus',preds?'PREDIÇÕES IMPORTADAS':'SEM PREVISÕES');
 }
