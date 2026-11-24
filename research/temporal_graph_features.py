@@ -43,7 +43,7 @@ def make_hourly_graph(df,events):
     empty=TemporalGraph(feat,np.empty((0,2),dtype=np.int32),0,0,0.)
     if events.empty:return empty
     times=pd.DatetimeIndex(pd.to_datetime(df.timestamp,utc=True))
-    start=times.astype("int64").to_numpy()
+    start=times.as_unit("ns").asi8  # explicit nanosecond precision across pandas 2/3
     end=int(start[-1]+3_600_000_000_000)
     index={}
     valid=[]
@@ -53,7 +53,7 @@ def make_hourly_graph(df,events):
         candle=int(np.searchsorted(start,ns,side="right")-1)
         if candle<0 or candle>=n:continue
         if int(row.node_id) in index:raise ValueError("duplicate node_id")
-        data={"id":int(row.node_id),"parent":int(row.parent_id) if pd.notna(row.parent_id) else None,
+        data={"id":int(row.node_id),"parent":int(row.parent_id) if pd.notna(row.parent_id) and str(row.parent_id).strip()!="" else None,
               "candle":candle,"depth":int(row.depth),
               "created_ns":ns,"kind":str(row.node_type),
               "story":int(row.story_id)}
