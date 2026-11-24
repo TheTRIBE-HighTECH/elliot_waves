@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Test annotation and collector schema
-        run: python -m unittest discover -s research -p 'test_*.py' -v
+        run: |\n          python -m compileall -q research\n          python -m unittest discover -s research -p 'test_*.py' -v
 
   daily-snapshot:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.train)
@@ -47,7 +47,7 @@ jobs:
           if-no-files-found: error
 
   train-and-benchmark:
-    if: github.event_name == 'workflow_dispatch' && inputs.train
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.train)
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -58,9 +58,9 @@ jobs:
       - name: Install scientific dependencies
         run: pip install -r research/requirements.txt
       - name: Download historical BTC/USDT data (2024-2025)
-        run: python research/download_binance.py --symbols BTCUSDT --start 2024-01 --end 2025-12 --out research/datasets
+        run: python research/download_binance.py --symbols BTCUSDT ETHUSDT SOLUSDT --start 2024-01 --end 2025-12 --out research/datasets
       - name: Compare candidate networks on identical chronological splits
-        run: python research/compare_nn.py --csv research/datasets/BTCUSDT_1h.csv --epochs 6 --out research/runs
+        run: for asset in BTCUSDT ETHUSDT SOLUSDT; do python research/compare_nn.py --csv research/datasets/${asset}_1h.csv --epochs 6 --out research/runs/${asset}; done\n      - name: Rank candidate architectures across assets using validation only\n        run: python research/rank_models.py research/runs/BTCUSDT/report.json research/runs/ETHUSDT/report.json research/runs/SOLUSDT/report.json --out research/runs/ranking.json
       - uses: actions/upload-artifact@v4
         with:
           name: elliott-model-benchmark-${{ github.run_id }}
