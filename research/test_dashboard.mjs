@@ -104,7 +104,30 @@ test('Dashboard page has all critical components and import controls',()=>{
   const html=readFileSync(new URL('../demo_output/dashboard.html',import.meta.url),'utf8');
   for(const id of ['marketFile','graphFile','predictionsFile','reportFile','clockSource','alpha',
     'calendarChart','informationChart','graphChart','neuralOutputs','equityChart',
-    'annotationsTable','runBacktest','exportConfig','exportAnnotations']){
+    'annotationsTable','runBacktest','exportConfig','exportAnnotations','signalMaxAgeHours']){
     assert.match(html,new RegExp('id="'+id+'"'));
   }
+});
+
+test('Sparse neural forecasts persist causally for configured TTL, then expire',()=>{
+  const bars=candles(75);
+  const signal=new Map();
+  signal.set(bars[30].t,{known:bars[31].t,p:1,rev:0,conf:1,hash:'a'.repeat(64)});
+  const short=evaluateBacktest(bars,signal,
+    {signalMaxAgeHours:1,stopPct:30,takePct:30,riskPct:1});
+  const long=evaluateBacktest(bars,signal,
+    {signalMaxAgeHours:12,stopPct:30,takePct:30,riskPct:1});
+  assert.equal(short.matched,2);
+  assert.equal(long.matched,13);
+  assert(long.exposurePct>short.exposurePct);
+  assert(long.trades.some(t=>t.reason==='signal_or_expiry'));
+});
+test('Prediction published after its candle cannot be applied to past openings',()=>{
+  const bars=candles(75);
+  const late=new Map([[bars[12].t,
+    {known:bars[17].t,p:1,rev:0,conf:1,hash:'a'.repeat(64)}]]);
+  const results=evaluateBacktest(bars,late,
+    {signalMaxAgeHours:2,stopPct:30,takePct:30,riskPct:1});
+  assert.equal(results.matched,3);
+  assert(results.trades.every(t=>t.entry>=bars[17].t));
 });
