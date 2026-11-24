@@ -240,7 +240,7 @@ def f1_macro(y,yhat):
         fs.append(float(2*tp/(2*tp+fp+fn)) if 2*tp+fp+fn else 0.)
     return float(np.mean(fs))
 
-def scores(p,y,rev,ry):
+def scores(p,y,ry):
     w,r,c=p
     f=f1_macro(y,w.argmax(1))
     mask=ry>=0
