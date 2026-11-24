@@ -10,7 +10,7 @@ swing pseudo-labels, NOT verified human EW annotations. Dataset reconstructed
 after the fact (not contemporaneous immutable 2024/25 availability).
 """
 from __future__ import annotations
-import argparse, dataclasses, json, pathlib
+import argparse, dataclasses, json, pathlib, hashlib
 import numpy as np
 import pandas as pd
 import torch
@@ -198,9 +198,36 @@ def evaluate(df,nodes,epochs=8,alpha=.6,cost_bps=13.,seed=41,out=None):
         }
     if out:
         out=pathlib.Path(out);out.mkdir(exist_ok=True,parents=True)
+        checkpoint=out/"graph_fusion_tcn.pt"
         torch.save({"state_dict":model.state_dict(),"channels":NCHANNELS+GRAPH_CHANNELS,
                     "classes":CLASSES,"scales":SCALES,
-                    "label_status":report["label_status"]},out/"graph_fusion_tcn.pt")
+                    "label_status":report["label_status"]},checkpoint)
+        weight_sha=hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+        # Both outputs are generated from EXACTLY the same trained checkpoint.
+        # Closing candle i is available at opening i+1: no retrospective fills.
+        rows=[]
+        for mode,clock_name in (("calendar_graph","calendar"),
+                                ("graphclock_graph","information")):
+            wave,reversal,confidence=predict(model,ts[mode])
+            wave3_index=CLASSES.index("bull_3")
+            for k,i in enumerate(it):
+                rows.append({
+                  "clock":clock_name,
+                  "timestamp":df.timestamp.iloc[i].isoformat(),
+                  "known_at":df.timestamp.iloc[i+1].isoformat(),
+                  "weight_sha256":weight_sha,
+                  "p_bull_3":float(wave[k,wave3_index]),
+                  "p_reversal":float(reversal[k]),
+                  "confidence":float(confidence[k])
+                })
+        pd.DataFrame(rows).to_csv(out/"inference_paired_clocks.csv",index=False)
+        report["paired_inference_export"]={
+          "filename":"inference_paired_clocks.csv",
+          "rows":len(rows),"weight_sha256":weight_sha,
+          "data_partition":"2025-H2 untouched holdout only",
+          "signal_available":"next candle open",
+          "wave_labels":"RETROSPECTIVE_WEAK_SWING_LABELS"
+        }
         (out/"comparison.json").write_text(json.dumps(report,indent=2,ensure_ascii=False))
         pd.DataFrame({"timestamp":df.timestamp,"hn_events_log":g[:,0],
                       "hn_comments_log":g[:,1],"graph_clock":gclock,

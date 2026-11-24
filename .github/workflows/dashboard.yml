@@ -1,0 +1,70 @@
+name: Interactive Elliott research dashboard
+on:
+  pull_request:
+    paths:
+      - 'demo_output/dashboard*'
+      - 'research/test_dashboard.mjs'
+      - '.github/workflows/dashboard.yml'
+      - 'vercel.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-dashboard-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify ESM module and browser script syntax
+        run: |
+          node --check demo_output/dashboard-core.mjs
+          node --check demo_output/dashboard.js
+      - name: Run causal numerical and UI regression tests
+        run: node --test research/test_dashboard.mjs
+      - name: Verify referenced static assets and Vercel routing
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("demo_output")
+          v=json.loads(pathlib.Path("vercel.json").read_text())
+          assert v["outputDirectory"]=="demo_output"
+          assert any(r["source"]=="/" and r["destination"]=="/dashboard.html" for r in v["rewrites"])
+          for p in ["dashboard.html","dashboard.js","dashboard-core.mjs",
+                    "dashboard.css","dashboard_reference.json",
+                    "PAINEL_INTERATIVO.html","relogio_informacional.csv"]:
+              assert (root/p).is_file(), f"Missing published asset {p}"
+          PY
+      - name: Smoke-test actual dashboard in a headless browser
+        run: |
+          set -eu
+          python3 -m http.server 8765 --directory demo_output >/tmp/elliott-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          sleep 2
+          if command -v google-chrome >/dev/null 2>&1; then
+            CHROME=$(command -v google-chrome)
+          elif command -v chromium >/dev/null 2>&1; then
+            CHROME=$(command -v chromium)
+          else
+            echo "Chrome/Chromium unavailable in CI runner"; exit 1
+          fi
+          timeout 60 "$CHROME" --headless=new --no-sandbox --disable-gpu \
+            --disable-dev-shm-usage --virtual-time-budget=12000 \
+            --dump-dom http://127.0.0.1:8765/dashboard.html \
+            >/tmp/elliott-dom.html 2>/tmp/elliott-chrome.log
+          python3 - <<'PY'
+          import pathlib,re
+          html=pathlib.Path("/tmp/elliott-dom.html").read_text()
+          def get(id):
+              m=re.search(r'id="'+id+r'"[^>]*>([^<]*)',html)
+              assert m, f"Missing rendered DOM #{id}"
+              return m.group(1).strip()
+          print("Market:",get("marketCount"))
+          print("Price:",get("statPrice"))
+          print("Clock:",get("statSpeed"))
+          assert "candles" in get("marketCount")
+          assert get("statPrice") not in ("","—")
+          assert get("statSpeed") not in ("","—")
+          PY

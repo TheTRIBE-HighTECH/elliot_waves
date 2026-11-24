@@ -1,0 +1,49 @@
+{
+  "kind": "historical-benchmark-snapshot",
+  "source_url": "https://github.com/TheTRIBE-HighTECH/elliot_waves/actions/runs/45346753333",
+  "source_artifact_url": "https://github.com/TheTRIBE-HighTECH/elliot_waves/actions/runs/45346753333/artifacts/14898876486",
+  "dataset": "BTCUSDT spot 1h, 2024-2025",
+  "holdout": "2025-H2",
+  "graph_nodes": 3016,
+  "graph_active_hours": 845,
+  "training_label_status": "RETROSPECTIVE_WEAK_SWING_LABELS_NOT_HUMAN_VERIFIED",
+  "note": "Relatório real anterior, somente leitura. Mudanças nos sliders NÃO reexecutam a rede.",
+  "modes": {
+    "calendar_no_graph": {
+      "test": {
+        "macro_f1_labeled": 0.045620498523017694,
+        "brier_reversal": 0.14166678850442854
+      },
+      "backtest": {
+        "return_pct": -7.3788366114014625
+      }
+    },
+    "calendar_graph": {
+      "test": {
+        "macro_f1_labeled": 0.04493179328885791,
+        "brier_reversal": 0.14171451859807996
+      },
+      "backtest": {
+        "return_pct": -7.3788366114014625
+      }
+    },
+    "graphclock_no_graph": {
+      "test": {
+        "macro_f1_labeled": 0.05030353952182422,
+        "brier_reversal": 0.14109966973997473
+      },
+      "backtest": {
+        "return_pct": -5.744891691511034
+      }
+    },
+    "graphclock_graph": {
+      "test": {
+        "macro_f1_labeled": 0.05040185508935509,
+        "brier_reversal": 0.14109772705242898
+      },
+      "backtest": {
+        "return_pct": -5.744891691511034
+      }
+    }
+  }
+}

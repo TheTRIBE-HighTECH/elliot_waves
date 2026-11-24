@@ -1,3 +1,55 @@
+# Elliott Lab — Dashboard informacional interativo
+
+A página inicial da Vercel agora aponta para **\`demo_output/dashboard.html\`**,
+uma aplicação estática autocontida que trabalha com CSVs locais e permite
+configurar um relógio informacional, observar uma árvore real de respostas,
+avaliar relações Fibonacci e registrar ondas manualmente.
+O painel original continua acessível por \`/PAINEL_INTERATIVO.html\` ou
+\`/painel-original\`.
+
+**Operação:** importe o arquivo \`research/datasets/BTCUSDT_1h.csv\` produzido
+pelo downloader de dados da Binance (ou outro OHLCV com
+\`timestamp,open,high,low,close,volume\`). Em seguida, importe
+\`research/graph_data/hn_nodes.csv\` (Hacker News) ou
+\`research/datasets/hn_graph/hn_reply_events.csv\` (grafo alternativo).
+A coleta retrospectiva preserva vínculos explícitos pai → resposta; não
+comprova influência humana ou causalidade financeira.
+
+Para executar **backtest A/B de inferência neural**, importe
+\`research/graph_runs/inference_paired_clocks.csv\`, exportado automaticamente
+pela execução do pipeline \`research/graph_fusion.py\`. Cabeçalhos:
+
+\`\`\`csv
+clock,timestamp,known_at,weight_sha256,p_bull_3,p_reversal,confidence
+\`\`\`
+
+Cada relógio (\`calendar\` / \`information\`) deve ter o **mesmo SHA-256
+de checkpoint**. \`known_at\` precisa indicar quando a predição passou a
+estar efetivamente disponível; o backtest executa no primeiro open posterior
+ao sinal. O navegador rejeita previsões sem proveniência temporal e dados sem
+aberturas reais. A amostra inicial publicada é **sintética**: jamais se
+confunde com um resultado de mercado. O benchmark histórico fixo de 2025-H2
+é apenas uma referência; os sliders não o reexecutam.
+
+O painel permite exportar \`elliott_experiment_config.json\` para
+reproduzir parâmetros da pesquisa. Hiperparâmetros da rede exportam
+configuração mas **não treinam o PyTorch no cliente estático**. As anotações
+de ondas feitas por clique são exportadas como \`human_unverified\` e exigem
+revisão antes do treinamento supervisionado.
+
+### Testes do dashboard
+
+\`\`\`bash
+node --check demo_output/dashboard-core.mjs
+node --check demo_output/dashboard.js
+node --test research/test_dashboard.mjs
+\`\`\`
+
+CI: \`.github/workflows/dashboard.yml\`, incluindo testes de causalidade,
+CSV, previsões e integridade da publicação Vercel.
+
+---
+
 # Elliott–Fibonacci × Relógio Informacional — protótipo v0.1
 
 Implementação reprodutível de um **teste de hipótese**, não de um sistema comprovado de previsão financeira.

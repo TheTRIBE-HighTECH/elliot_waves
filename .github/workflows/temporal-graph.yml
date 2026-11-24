@@ -39,6 +39,7 @@ jobs:
           path: |
             research/graph_data/
             research/graph_runs/
+            research/datasets/BTCUSDT_1h.csv
             research/covid_2020_graph/
           retention-days: 30
           if-no-files-found: warn
