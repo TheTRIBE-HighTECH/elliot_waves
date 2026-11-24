@@ -177,7 +177,9 @@ def main_experiment(args):
     labels=label_blocks(df,train_end,test_start)
     reversal=future_reversal(df,train_end,test_start)
     calendar=np.arange(len(df),dtype=float)
-    informational,speed=information_clock(df.volume.to_numpy(),args.alpha)
+    clock_input=(np.expm1(graph.hourly[:,0]) if args.clock_source=="graph"
+                 else df.volume.to_numpy())
+    informational,speed=information_clock(clock_input,args.alpha)
     if not np.all(np.diff(informational)>0):raise AssertionError("Nonmonotone clock")
 
     ids={
@@ -237,6 +239,8 @@ def main_experiment(args):
       "trained_weights_shared_across_clocks":True,
       "graph_windows_directed_and_causal":True,
       "cost_bps_per_side":args.bps,"alpha_clock":args.alpha,
+      "clock_source":args.clock_source,
+      "speed_min":float(speed.min()),"speed_max":float(speed.max()),
       "n_samples":{k:len(v["calendar"][3]) for k,v in splits.items()},
       "ohlcv_sha256":hashlib.sha256(Path(args.csv).read_bytes()).hexdigest(),
       "graph_sha256":hashlib.sha256(Path(args.events).read_bytes()).hexdigest(),
@@ -245,7 +249,7 @@ def main_experiment(args):
         "Story selection from today's search index can induce retrospective selection/survivorship bias.",
         "Without independent analyst labels, wave F1 only measures agreement with pseudo-labels.",
         "No information was obtained from future candles or future replies in inference windows.",
-        "Volume clock and graph clock are different potential signals; causal benefit not established.",
+        "Graph-event and volume clocks are distinct; the clock source is recorded per run.",
         "Trade signal on candle close, execution next open; no lookahead fills, spot long only."
       ]
     }
@@ -271,6 +275,7 @@ def main():
     parser.add_argument("--asset",default="BTCUSDT")
     parser.add_argument("--epochs",type=int,default=8)
     parser.add_argument("--alpha",type=float,default=.8)
+    parser.add_argument("--clock-source",choices=["graph","volume"],default="graph")
     parser.add_argument("--bps",type=float,default=13.)
     parser.add_argument("--seed",type=int,default=31)
     parser.add_argument("--out",type=Path,default=Path("research/runs/hn_graph"))
