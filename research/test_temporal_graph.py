@@ -85,7 +85,7 @@ class GraphCausalityTests(unittest.TestCase):
 
     def test_missing_or_backwards_event_rejected(self):
         df,events=self.get_fixture()
-        events.loc[1,"created_at"]=pd.Timestamp("2025-06-14T23:55:00Z")
+        events.loc[2,"created_at"]=pd.Timestamp("2025-06-15T00:45:00Z")
         with self.assertRaises(ValueError):
             make_hourly_graph(df,events)
 
