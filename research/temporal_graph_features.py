@@ -112,8 +112,9 @@ def graph_windows(graph,axis,indices,scales=(1,3,8),length=48):
             if ticks[0]<axis[0]:valid=False;break
             # All interpolated timestamps are <= the sample's last candle.
             hist=axis[:i+1]
-            features=np.stack([np.interp(ticks,hist,graph.hourly[:i+1,j])
-                               for j in range(GRAPH_DIM)],0).astype("float32")
+            historical_index=np.searchsorted(hist,ticks,side="right")-1
+            # Discrete comments are not linearly interpolated backwards in time.
+            features=graph.hourly[historical_index].T.astype("float32")
             adjacency=np.eye(length,dtype="float32")
             if len(edges):
                 lo=np.searchsorted(dest,0)   # edges are sorted by destination candle
