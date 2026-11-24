@@ -91,7 +91,7 @@ class GraphCausalityTests(unittest.TestCase):
 
 try:
     import torch
-    from graph_fusion import PriceGraphFusion
+    from graph_message_passing import PriceGraphFusion
     HAS_TORCH=True
 except ImportError:
     HAS_TORCH=False
