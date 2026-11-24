@@ -87,7 +87,7 @@ test('Two equal predictions and the same costs yield equal trades and returns',(
 });
 test('Future-published predictions are never tradable at earlier candle open',()=>{
   const bars=candles(70),pred=new Map();
-  pred.set(bars[0].t,{known:bars[10].t,p:1,rev:0,conf:1,hash:'a'.repeat(64)});
+  pred.set(bars[0].t,{known:bars[69].t+3600000,p:1,rev:0,conf:1,hash:'a'.repeat(64)});
   const result=evaluateBacktest(bars,pred);
   assert.equal(result.tradeCount,0);assert.equal(result.matched,0);
 });
