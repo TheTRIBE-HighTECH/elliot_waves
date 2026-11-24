@@ -140,23 +140,26 @@ def run_training(model,train_samples,train_labels,train_rev,
     model.load_state_dict(state)
     return model,best
 
-def infer(model,samples,graph_enabled=True):
+def infer(model,samples,graph_enabled=True,drop_real_edges=False):
     px,g,adj=samples
     probabilities=[];reversals=[];confidence=[]
     model.eval()
     with torch.no_grad():
         for k in range(0,len(px),128):
+            a=adj[k:k+128]
+            if drop_real_edges:
+                a=np.broadcast_to(np.eye(a.shape[-1],dtype='float32'),a.shape)
             w,r,c=model(tensorize(px[k:k+128]),tensorize(g[k:k+128]),
-                        tensorize(adj[k:k+128]),graph_enabled=graph_enabled)
+                        tensorize(a),graph_enabled=graph_enabled)
             probabilities.append(torch.softmax(w,dim=1).numpy())
             reversals.append(torch.sigmoid(r).numpy())
             confidence.append(torch.sigmoid(c).numpy())
     return np.concatenate(probabilities),np.concatenate(reversals),np.concatenate(confidence)
 
-def score_eval(model,segments,labels,rev,df,bps,graph_enabled):
+def score_eval(model,segments,labels,rev,df,bps,graph_enabled,drop_real_edges=False):
     outcome={}
     for clock,(px,g,adj,idx) in segments.items():
-        prob=infer(model,(px,g,adj),graph_enabled)
+        prob=infer(model,(px,g,adj),graph_enabled,drop_real_edges)
         outcome[clock]={"classification":scores(prob,labels[idx],rev[idx]),
                         "backtest":backtest(df,idx,prob,bps)}
     return outcome
@@ -227,6 +230,8 @@ def main_experiment(args):
         if enabled:
             result[name]["ablation_no_graph_same_weights"]=score_eval(
                 model,te,labels,reversal,df,args.bps,False)
+            result[name]["ablation_no_reply_edges_same_counts"]=score_eval(
+                model,te,labels,reversal,df,args.bps,True,drop_real_edges=True)
 
     meta={
       "asset":args.asset,"events_count":graph.event_count,
