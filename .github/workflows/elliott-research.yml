@@ -110,7 +110,7 @@ jobs:
       - name: Retrieve COVID-19 discussion sample for later graph-validation study
         run: python research/hn_reply_graph.py --assets COVID --start 2020-03 --end 2020-03 --stories-month 3 --max-nodes-story 200 --spacing 0.15 --out research/datasets/hn_covid_2020
       - name: Train matched price-only and real-graph fusion, two clocks
-        run: python research/graph_fusion.py --csv research/datasets/BTCUSDT_1h.csv --events research/datasets/hn_graph/hn_reply_events.csv --asset BTCUSDT --epochs 8 --out research/runs/graph_fusion_BTC
+        run: python research/graph_message_passing.py --csv research/datasets/BTCUSDT_1h.csv --events research/datasets/hn_graph/hn_reply_events.csv --asset BTCUSDT --epochs 8 --out research/runs/graph_fusion_BTC
       - uses: actions/upload-artifact@v4
         with:
           name: elliott-real-temporal-graph-${{ github.run_id }}
