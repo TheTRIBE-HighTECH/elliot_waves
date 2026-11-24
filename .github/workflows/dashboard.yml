@@ -1,0 +1,38 @@
+name: Interactive Elliott research dashboard
+on:
+  pull_request:
+    paths:
+      - 'demo_output/dashboard*'
+      - 'research/test_dashboard.mjs'
+      - '.github/workflows/dashboard.yml'
+      - 'vercel.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-dashboard-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify ESM module and browser script syntax
+        run: |
+          node --check demo_output/dashboard-core.mjs
+          node --check demo_output/dashboard.js
+      - name: Run causal numerical and UI regression tests
+        run: node --test research/test_dashboard.mjs
+      - name: Verify referenced static assets and Vercel routing
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("demo_output")
+          v=json.loads(pathlib.Path("vercel.json").read_text())
+          assert v["outputDirectory"]=="demo_output"
+          assert any(r["source"]=="/" and r["destination"]=="/dashboard.html" for r in v["rewrites"])
+          for p in ["dashboard.html","dashboard.js","dashboard-core.mjs",
+                    "dashboard.css","dashboard_reference.json",
+                    "PAINEL_INTERATIVO.html","relogio_informacional.csv"]:
+              assert (root/p).is_file(), f"Missing published asset {p}"
+          PY
