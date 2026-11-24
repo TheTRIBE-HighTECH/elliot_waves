@@ -11,7 +11,7 @@ const chartColor={calendar:'#36d8ca',information:'#f6bb62',speed:'#ac9df9',
   neutral:'#8499b0'};
 const sliders=['alpha','beta','gamma','replyWeight','depthWeight','halfLife',
   'window','visibleBars','reversal','fibTolerance','hurstWindow','maxNodes',
-  'minDepth','graphHorizon','epochs','dropout','horizon','waveProb','revThr','confThr'];
+  'minDepth','graphHorizon','epochs','dropout','horizon','waveProb','revThr','confThr','signalMaxAgeHours'];
 const clockFields=['clockSource','alpha','beta','gamma','replyWeight','depthWeight','halfLife',
   'window','minSpeed','maxSpeed'];
 const analysisFields=['visibleBars','reversal','fibTolerance','hurstWindow','cutoff',
@@ -32,7 +32,7 @@ function readFile(file){return new Promise((resolve,reject)=>{
 function formatDisplay(id){
   const v=numeric(id);
   const useInt=['window','visibleBars','fibTolerance','hurstWindow','maxNodes',
-    'minDepth','graphHorizon','halfLife','epochs','horizon'].includes(id);
+    'minDepth','graphHorizon','halfLife','epochs','horizon','signalMaxAgeHours'].includes(id);
   const text=useInt?String(Math.round(v)):pretty(v,v<1?2:1);
   setText(id+'Out',text);
 }
@@ -50,7 +50,7 @@ function getBacktestParams(){
     slippageBps:numeric('slippageBps'),riskPct:numeric('riskPct'),
     stopPct:numeric('stopPct'),takePct:numeric('takePct'),
     threshold:numeric('waveProb'),maxReversal:numeric('revThr'),
-    minConfidence:numeric('confThr')};
+    minConfidence:numeric('confThr'),signalMaxAgeHours:numeric('signalMaxAgeHours')};
   for(const [k,v] of Object.entries(cfg))if(!Number.isFinite(v)||v<0)
     throw Error('Parâmetro de backtest inválido: '+k);
   if(cfg.capital<=0||cfg.stopPct<=0||cfg.riskPct<=0||cfg.takePct<=0)
@@ -553,7 +553,7 @@ function setup(){
     const el=$(id);el.addEventListener(el.type==='range'?'input':'change',()=>{
       if(sliders.includes(id))formatDisplay(id);
       saveSettings();
-      if(state.neuralResults&&['waveProb','revThr','confThr','capital','riskPct',
+      if(state.neuralResults&&['waveProb','revThr','confThr','signalMaxAgeHours','capital','riskPct',
           'feeBps','slippageBps','stopPct','takePct'].includes(id))startBacktest(false);
     });
   }
