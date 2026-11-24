@@ -123,6 +123,9 @@
       <input id="revThr" type="range" min=".05" max=".95" step=".05" value=".50"/>
       <div class="input-row"><label for="confThr">Confiança mínima</label><output id="confThrOut"></output></div>
       <input id="confThr" type="range" min=".05" max=".95" step=".05" value=".55"/>
+      <div class="input-row"><label for="signalMaxAgeHours">Validade da previsão (horas)</label><output id="signalMaxAgeHoursOut"></output></div>
+      <input id="signalMaxAgeHours" type="range" min="1" max="72" step="1" value="12"/>
+      <p class="group-note">As previsões são geradas a cada 12 horas no modelo atual. O sinal permanece utilizável apenas pelo prazo acima; não é atualizado artificialmente a cada candle.</p>
       <div class="paired"><label>Capital inicial<input id="capital" type="number" min="100" step="100" value="10000"/></label><label>Risco por operação (%)<input id="riskPct" type="number" min=".1" max="10" step=".1" value="1"/></label></div>
       <div class="paired"><label>Taxa (bps/lado)<input id="feeBps" type="number" min="0" max="300" step="1" value="10"/></label><label>Slippage (bps/lado)<input id="slippageBps" type="number" min="0" max="300" step="1" value="3"/></label></div>
       <div class="paired"><label>Stop (%)<input id="stopPct" type="number" min=".1" max="30" step=".1" value="2"/></label><label>Take profit (%)<input id="takePct" type="number" min=".1" max="60" step=".1" value="4"/></label></div>
