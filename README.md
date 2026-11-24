@@ -137,3 +137,12 @@ O detector simples de pivôs opera com reversão de aproximadamente 0,25% em log
 - `relogio_informacional.csv` — preço, fluxos, desequilíbrio, velocidade, tau;
 - `hurst_por_escala.csv` — estimativas locais e R² para ambos os relógios;
 - `diagnosticos.json` — resumo de execução e candidatos Elliott confirmados.
+
+### Causalidade e duração das previsões
+
+A versão de inferência da TCN gera previsões a cada 12 candles horários.
+No dashboard, `signalMaxAgeHours` (inicialmente 12 h) controla por quanto
+tempo a última previsão permanece válida. A simulação só usa sinais com
+`known_at <= abertura atual`; ao vencer a duração, zera o sinal e fecha a
+posição na próxima abertura. Não existem sinais intermediários inventados.
+
