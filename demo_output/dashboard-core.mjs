@@ -214,32 +214,49 @@ export function normalizePredictions(rows){
 }
 export function evaluateBacktest(bars,predictions,params={},end=bars.length){
   const cfg={capital:10000,feeBps:10,slippageBps:3,threshold:.45,maxReversal:.50,
-    minConfidence:.55,stopPct:2,takePct:4,riskPct:1,...params};
+    minConfidence:.55,stopPct:2,takePct:4,riskPct:1,signalMaxAgeHours:12,...params};
   if(!bars.every(x=>x.hasOpen))throw Error('Backtest exige preços de abertura reais (open)');
+  if(!Number.isFinite(cfg.signalMaxAgeHours)||cfg.signalMaxAgeHours<=0)
+    throw Error('Validade do sinal precisa ser positiva');
   const map=predictions instanceof Map?predictions:new Map();
+  // The model exports a prediction only every N bars (typically N=12).
+  // Consume predictions by their actual availability timestamp, not by assuming
+  // one prediction exists at every candle. Expire stale forecasts explicitly.
+  const timeline=[...map.entries()]
+    .map(([t,p])=>({t:Number(t),...p}))
+    .filter(p=>[p.t,p.known,p.p,p.rev,p.conf].every(Number.isFinite))
+    .sort((a,b)=>a.known-b.known||a.t-b.t);
+  let next=0,active=null;
   let cash=cfg.capital,position=null,peak=cash,maxDrawdown=0,exposure=0;
   const trades=[],equity=[],fee=(cfg.feeBps+cfg.slippageBps)/10000;
   let signalCount=0,matched=0,positive=0,negative=0;
   for(let i=1;i<end;i++){
-    const bar=bars[i],prior=bars[i-1],pred=map.get(prior.t);
-    const eligible=pred&&pred.known<=bar.t;
-    const buy=Boolean(eligible&&pred.p>=cfg.threshold&&pred.rev<=cfg.maxReversal&&pred.conf>=cfg.minConfidence);
+    const bar=bars[i];
+    while(next<timeline.length&&timeline[next].known<=bar.t){
+      // A forecast cannot be used before its source candle closes.
+      if(timeline[next].t<bar.t)active=timeline[next];
+      next++;
+    }
+    const eligible=Boolean(active&&active.known<=bar.t&&active.t<bar.t&&
+      bar.t-active.known<=cfg.signalMaxAgeHours*3600000);
+    const buy=Boolean(eligible&&active.p>=cfg.threshold&&
+      active.rev<=cfg.maxReversal&&active.conf>=cfg.minConfidence);
     if(eligible){matched++;if(buy)signalCount++;}
     const fillEntry=bar.open*(1+fee),fillExit=bar.open*(1-fee);
     if(position&&!buy){
       const proceeds=position.qty*fillExit;
       const pnl=proceeds-position.entryCost;cash+=proceeds;
-      trades.push({entry:position.entryTime,exit:bar.t,pnl,returnPct:100*pnl/position.entryCost,reason:'signal'});
+      trades.push({entry:position.entryTime,exit:bar.t,pnl,returnPct:100*pnl/position.entryCost,reason:'signal_or_expiry'});
       positive+=Math.max(0,pnl);negative+=Math.max(0,-pnl);position=null;
     }else if(!position&&buy){
-      const qty=Math.min(cash/(fillEntry),cash*cfg.riskPct/100/(fillEntry*cfg.stopPct/100));
+      const qty=Math.min(cash/fillEntry,cash*cfg.riskPct/100/(fillEntry*cfg.stopPct/100));
       if(qty>0&&isNum(qty)){
         position={qty,entryPrice:fillEntry,entryCost:qty*fillEntry,entryTime:bar.t};
         cash-=position.entryCost;
       }
     }
     if(position){
-      // Conservative stop-first priority if both stop and target touch same bar.
+      // Stop-first is conservative when stop and target touch in the same bar.
       const stop=position.entryPrice*(1-cfg.stopPct/100),take=position.entryPrice*(1+cfg.takePct/100);
       let exitPrice=null,reason='';
       if(bar.low<=stop){exitPrice=Math.min(stop,bar.open)*(1-fee);reason='stop';}
