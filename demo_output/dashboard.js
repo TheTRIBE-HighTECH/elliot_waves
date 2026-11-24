@@ -159,7 +159,7 @@ function makeSynthetic(n=1600){
   let seed=73;function rand(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
   const rows=[],start=Date.UTC(2026,9,1,0,0,0);let price=66000;
   for(let i=0;i<n;i++){
-    const burst=Math.exp(-((i-420)/85)**2)+1.2*Math.exp(-((i-1220)/92)**2);
+    const burst=Math.exp(-(((i-420)/85)**2))+1.2*Math.exp(-(((i-1220)/92)**2));
     const volume=Math.exp(1.7+.75*burst+.3*(rand()-.5));
     const previous=price,noise=(rand()-.5)*.001;
     price=Math.max(1000,previous*Math.exp(.00012*Math.sin(i/21)+.0002*Math.sin(i/119)+noise));
@@ -335,7 +335,7 @@ function neuralData(){
   const wrapper=document.createElement('div');wrapper.className='neural-box';
   for(const [key,label] of [['calendar','Cronológico'],['information','Informacional']]){
     const items=state.predictions.series[key];
-    const recent=[...items.entries()].filter(([t,row])=>t<state.bars[state.end].t||t<=state.bars[state.end-1].t)
+    const recent=[...items.entries()].filter(([t])=>t<=state.bars[state.end-1].t)
       .sort((a,b)=>b[0]-a[0])[0];
     const cell=document.createElement('div');const small=document.createElement('small');small.textContent=label+' · '+items.size+' previsões';
     const strong=document.createElement('strong');strong.textContent=recent?pretty(recent[1].p*100,1)+'%':'—';
@@ -396,8 +396,7 @@ function renderBacktest(resultA=null,resultB=null){
   info.textContent='Mesmo capital, custos e parâmetros; previsões com o mesmo hash de pesos. Stop priorizado caso stop e alvo sejam tocados no mesmo candle.';
   root.append(info);
   const svg=$('equityChart');
-  buildLine(svg,resultA.equity.map(x=>x.value),null,chartColor.calendar,{width:1060,height:200,startLabel:'Início',endLabel:'Último candle'});
-  // Overlay second series using same scale and axes from both portfolios.
+  // Overlay both curves using the same axis and scale.
   svgClear(svg);
   const c1=resultA.equity.map(x=>x.value),c2=resultB.equity.map(x=>x.value),n=Math.min(c1.length,c2.length),W=1060,H=200;
   const values=[...c1,...c2],min=Math.min(...values),max=Math.max(...values),padding=(max-min)*.08||1;
@@ -481,7 +480,7 @@ function assertMatchingWeights(pred){
   if(ha!==hb)throw Error('Os relógios usam pesos diferentes. Comparação A/B recusada.');
   return ha;
 }
-function startBacktest(){
+function startBacktest(scroll=true){
   try{
     if(state.synthetic)throw Error('Backtest neural exige histórico OHLCV real. Demonstração sintética não é aceita.');
     if(!state.predictions)throw Error('Importe previsões neurais para ambos os relógios.');
@@ -491,7 +490,7 @@ function startBacktest(){
     const b=evaluateBacktest(state.bars,state.predictions.series.information,p,state.end);
     if(!a.matched||!b.matched)throw Error('Nenhuma previsão elegível para o período escolhido.');
     renderBacktest(a,b);state.neuralResults={a,b,hash};
-    $('sec-backtest').scrollIntoView({behavior:'smooth'});
+    if(scroll)$('sec-backtest').scrollIntoView({behavior:'smooth'});
     notify('Backtest A/B executado com os mesmos pesos e custos.');
   }catch(e){errorMessage(e);}
 }
@@ -554,7 +553,7 @@ function setup(){
       if(sliders.includes(id))formatDisplay(id);
       saveSettings();
       if(state.neuralResults&&['waveProb','revThr','confThr','capital','riskPct',
-          'feeBps','slippageBps','stopPct','takePct'].includes(id))startBacktest();
+          'feeBps','slippageBps','stopPct','takePct'].includes(id))startBacktest(false);
     });
   }
   $('marketFile').addEventListener('change',e=>importCSV('market',e.target.files[0]));
