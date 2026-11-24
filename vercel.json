@@ -7,6 +7,14 @@
   "rewrites": [
     {
       "source": "/",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/laboratorio",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/painel-original",
       "destination": "/PAINEL_INTERATIVO.html"
     }
   ]
