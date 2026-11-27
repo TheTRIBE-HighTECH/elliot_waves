@@ -248,7 +248,7 @@ def main():
     args.out.mkdir(parents=True,exist_ok=True)
     src=args.csv or acquire(args.out/"petr4_public_source.csv")
     df,raw,adj,bad_dates=load_prices(src)
-    dates=df.timestamp.to_numpy()
+    dates=df.timestamp.dt.tz_localize(None).to_numpy(dtype='datetime64[ns]')
     def begin_day(day):
         return int(np.searchsorted(dates,np.datetime64(day),side="left"))
     def end_day(day):
