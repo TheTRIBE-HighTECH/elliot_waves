@@ -24,9 +24,11 @@ jobs:
         run: python -m py_compile research/petr4_neural_backtest.py
       - name: Download and backtest PETR4, four models two clocks
         run: |
+          set -o pipefail
           python research/petr4_neural_backtest.py \
             --epochs 8 --alpha 0.8 --cost-bps 13 \
             --out research/petr4_runs | tee petr4_backtest_execution.log
+          test -s research/petr4_runs/petr4_backtest_report.json
       - name: Upload all verified calculations and predictions for dashboard
         if: always()
         uses: actions/upload-artifact@v4
