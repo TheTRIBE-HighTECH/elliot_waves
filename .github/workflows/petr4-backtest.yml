@@ -1,0 +1,41 @@
+name: PETR4 neural Elliott A/B backtest
+on:
+  pull_request:
+    paths:
+      - 'research/petr4_neural_backtest.py'
+      - '.github/workflows/petr4-backtest.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  petr4-neural-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific dependencies
+        run: |
+          python -m pip install 'numpy>=1.26,<3' 'pandas>=2,<3'
+          python -m pip install 'torch>=2.2,<3' --index-url https://download.pytorch.org/whl/cpu
+      - name: Verify syntax
+        run: python -m py_compile research/petr4_neural_backtest.py
+      - name: Download and backtest PETR4, four models two clocks
+        run: |
+          set -o pipefail
+          python research/petr4_neural_backtest.py \
+            --epochs 8 --alpha 0.8 --cost-bps 13 \
+            --out research/petr4_runs | tee petr4_backtest_execution.log
+          test -s research/petr4_runs/petr4_backtest_report.json
+      - name: Upload all verified calculations and predictions for dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PETR4-neural-backtest-${{ github.run_id }}
+          path: |
+            research/petr4_runs/
+            petr4_backtest_execution.log
+          retention-days: 30
+          if-no-files-found: warn
