@@ -42,7 +42,7 @@ def load_prices(path):
     for col in ("Adj Close","Open","High","Low","Close","Volume"):
         df[col]=pd.to_numeric(df[col],errors="coerce")
     df=df.dropna(subset=list(expected-{"Date"})).reset_index(drop=True)
-    df=df[(df.timestamp>=pd.Timestamp("2000-01-01",tz="UTC"))&
+    df=df[(df.timestamp>=pd.Timestamp("2013-01-01",tz="UTC"))&
           (df.timestamp<=pd.Timestamp("2026-11-27",tz="UTC"))].copy().reset_index(drop=True)
     invalid=(df[["Adj Close","Open","High","Low","Close"]].le(0).any(axis=1)|
              (df.Volume<0)|
