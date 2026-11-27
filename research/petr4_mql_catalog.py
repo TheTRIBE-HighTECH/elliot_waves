@@ -301,10 +301,10 @@ def main():
     above=int((matrix[matrix.family!="Benchmark"].test_return_adjusted_pct >
                baseline.test_return_adjusted_pct).sum())
     def reduce(row):
-        result=row.to_dict()
+        result=row.to_dict() if hasattr(row,'to_dict') else dict(row)
         for key,value in result.items():
             if isinstance(value,(np.integer,)):result[key]=int(value)
-            elif isinstance(value,(np.floating,)):result[key]=float(value) if np.isfinite(value) else None
+            elif isinstance(value,(np.floating,float)):result[key]=float(value) if np.isfinite(value) else None
         return result
     def curve_export(name,label):
         sig=signals[name];lo,hi=slices["test"]
