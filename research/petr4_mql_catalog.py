@@ -249,13 +249,15 @@ def main():
     src=args.csv or acquire(args.out/"petr4_public_source.csv")
     df,raw,adj,bad_dates=load_prices(src)
     dates=df.timestamp.to_numpy()
-    def find_day(day):
+    def begin_day(day):
         return int(np.searchsorted(dates,np.datetime64(day),side="left"))
+    def end_day(day):
+        return int(np.searchsorted(dates,np.datetime64(day),side="right")-1)
     # Exact same holdout window as previous PETR4 neural result.
     slices={
-      "train":(find_day(TRAIN_START),find_day(TRAIN_END)),
-      "validation":(find_day(VALIDATION_START),find_day(VALIDATION_END)),
-      "test":(find_day(TEST_START),find_day(TEST_END)),
+      "train":(begin_day(TRAIN_START),end_day(TRAIN_END)),
+      "validation":(begin_day(VALIDATION_START),end_day(VALIDATION_END)),
+      "test":(begin_day(TEST_START),end_day(TEST_END)),
     }
     for k,(lo,hi) in list(slices.items()):
         if hi>=len(df):raise ValueError("date outside dataset "+k)
