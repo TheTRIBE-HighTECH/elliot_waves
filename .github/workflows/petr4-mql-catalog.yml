@@ -1,0 +1,38 @@
+name: PETR4 MQL strategy family sweep
+on:
+  pull_request:
+    paths:
+      - 'research/petr4_mql_catalog.py'
+      - '.github/workflows/petr4-mql-catalog.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mql-families:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install strategy dependencies
+        run: pip install 'numpy>=1.26,<3' 'pandas>=2,<3'
+      - name: Verify syntax
+        run: python -m py_compile research/petr4_mql_catalog.py
+      - name: Execute real PETR4 strategy family sweep
+        shell: bash
+        run: |
+          set -o pipefail
+          python research/petr4_mql_catalog.py --cost-bps 13 \
+            --out research/mql_petr4_runs | tee research/mql_petr4_execution.log
+          test -s research/mql_petr4_runs/report.json
+      - name: Archive candidates, results and equity curves
+        uses: actions/upload-artifact@v4
+        with:
+          name: PETR4-MQL-style-catalog-${{ github.run_id }}
+          path: |
+            research/mql_petr4_runs/
+            research/mql_petr4_execution.log
+          retention-days: 30
+          if-no-files-found: error
