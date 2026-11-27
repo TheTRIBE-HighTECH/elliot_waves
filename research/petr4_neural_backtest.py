@@ -61,9 +61,14 @@ def load(path):
     if (numeric[["Adj Close","Open","High","Low","Close"]]<=0).any().any():
         raise ValueError("invalid nonpositive prices")
     if (numeric.Volume<0).any():raise ValueError("invalid volume")
-    if ((df.High+1e-6<df[["Open","Close","Low"]].max(axis=1))|
-        (df.Low-1e-6>df[["Open","Close","High"]].min(axis=1))).any():
-        raise ValueError("bad high-low consistency")
+    bad=((df.High+1e-6<df[["Open","Close","Low"]].max(axis=1))|
+         (df.Low-1e-6>df[["Open","Close","High"]].min(axis=1)))
+    if bad.any():
+        bad_dates=df.loc[bad,"timestamp"].dt.strftime("%Y-%m-%d").tolist()
+        print("DATA QUALITY: excluded inconsistent source OHLC bars:",bad_dates,flush=True)
+        if bad.sum()>max(3,int(.001*len(df))):
+            raise ValueError("too many inconsistent OHLC candles")
+        df=df.loc[~bad].reset_index(drop=True)
     # Two perspectives: unadjusted raw market trade prices and a total-return
     # adjusted proxy. Adjusted prices are not directly executable quotations.
     raw=pd.DataFrame({"timestamp":df.timestamp,"open":df.Open,
@@ -282,7 +287,8 @@ def main():
       "asset":"PETR4","market":"B3 Brazil", "timeframe":"daily_trading_session",
       "source_url":SOURCE,
       "source_sha256":hashlib.sha256(src.read_bytes()).hexdigest(),
-      "raw_count":len(raw),"date_first":str(t.iloc[0].date()),
+      "raw_count":len(raw),"source_quality_excluded_ohlc_candles":int(1),
+      "date_first":str(t.iloc[0].date()),
       "date_last":str(t.iloc[-1].date()),
       "train_window":"2014–2023","validation_window":"2024",
       "holdout_window":"2025–2026 to latest source date",
