@@ -32,7 +32,7 @@ jobs:
           assert v["outputDirectory"]=="demo_output"
           assert any(r["source"]=="/" and r["destination"]=="/dashboard.html" for r in v["rewrites"])
           for p in ["dashboard.html","dashboard.js","dashboard-core.mjs",
-                    "dashboard.css","dashboard_reference.json",
+                    "dashboard.css","dashboard_reference.json","petr4_three_models_reference.json",
                     "PAINEL_INTERATIVO.html","relogio_informacional.csv"]:
               assert (root/p).is_file(), f"Missing published asset {p}"
           PY
