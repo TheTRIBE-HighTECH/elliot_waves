@@ -131,3 +131,19 @@ test('Prediction published after its candle cannot be applied to past openings',
   assert.equal(results.matched,3);
   assert(results.trades.every(t=>t.entry>=bars[17].t));
 });
+
+test('Fixed PETR4 benchmark is sourced, with three models and a Buy & Hold control',()=>{
+  const data=JSON.parse(readFileSync(new URL('../demo_output/petr4_three_models_reference.json',import.meta.url),'utf8'));
+  assert.equal(data.schema,'PETR4_THREE_MODELS_BREAKOUT_MACD_NEURAL_V1');
+  assert.equal(data.sessions,469);
+  assert.equal(data.models.length,5);
+  assert.equal(data.read_only,true);
+  assert.equal(data.weak_elliott_labels,true);
+  assert.equal(data.retrospective_MACD_selection,true);
+  const model=data.models.find(x=>x.key==='MACD_intermarket');
+  const benchmark=data.models.find(x=>x.key==='buy_hold');
+  assert(model && benchmark);
+  assert(model.total>benchmark.total);
+  const html=readFileSync(new URL('../demo_output/dashboard.html',import.meta.url),'utf8');
+  assert.match(html,/id="loadPetr4Report"/);
+});
