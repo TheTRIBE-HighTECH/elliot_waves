@@ -153,20 +153,20 @@ def technical_candidates(frame,adj):
         if (kind=="Trend-filter" and name.startswith("Price/SMA") and
             params["n"] in (10,20,30,50,100) and params["filter"]=="none"):
             match=True
-        if kind=="Momentum" and params["lookback"] in (5,10,20,60) and
-           params["threshold"] in (-.05,0,.03):
+        if (kind=="Momentum" and params["lookback"] in (5,10,20,60) and
+           params["threshold"] in (-.05,0,.03)):
             match=True
-        if kind=="MACD" and params["fast"] in (8,12,20) and
-           params["slow"] in (26,35,50) and params["signal"] in (5,9):
+        if (kind=="MACD" and params["fast"] in (8,12,20) and
+           params["slow"] in (26,35,50) and params["signal"] in (5,9)):
             match=True
-        if kind=="Donchian" and params["entry"] in (20,40,55) and
-           params["exit"] in (5,10,20) and params["filter"] in ("none","ema200"):
+        if (kind=="Donchian" and params["entry"] in (20,40,55) and
+           params["exit"] in (5,10,20) and params["filter"] in ("none","ema200")):
             match=True
-        if kind=="RSI-trend" and params["period"] in (7,14) and
-           params["entry"] in (50,60) and params["exit"] in (40,45):
+        if (kind=="RSI-trend" and params["period"] in (7,14) and
+           params["entry"] in (50,60) and params["exit"] in (40,45)):
             match=True
-        if kind=="SuperTrend" and params["period"] in (7,14) and
-           params["multiple"] in (1.5,2.,3.):
+        if (kind=="SuperTrend" and params["period"] in (7,14) and
+           params["multiple"] in (1.5,2.,3.)):
             match=True
         if match:tech[name]=(kind,np.asarray(signal,dtype=bool))
     return tech
