@@ -150,8 +150,8 @@ def technical_candidates(frame,adj):
     for name,kind,params,signal in families(indicators(frame,adj)):
         if kind=="Benchmark":tech["BUY_HOLD"]=(kind,np.asarray(signal,dtype=bool));continue
         match=False
-        if kind=="Trend-filter" and name.startswith("Price/SMA") and
-           params["n"] in (10,20,30,50,100) and params["filter"]=="none":
+        if (kind=="Trend-filter" and name.startswith("Price/SMA") and
+            params["n"] in (10,20,30,50,100) and params["filter"]=="none"):
             match=True
         if kind=="Momentum" and params["lookback"] in (5,10,20,60) and
            params["threshold"] in (-.05,0,.03):
@@ -184,6 +184,16 @@ def candidate_masks(feat,family,top=24):
             "PETR_low_volatility","PETR_high_volatility","PETR_relative_ibov_",
             "Selic_")):
             selected.append(key)
+    # Pre-registered subset of cross-market gates limits multiple comparisons.
+    # Every major factor and rolling correlation remains represented.
+    priority=lambda k:(
+        ("r20>0" in k or "r20<0" in k or
+         "sma50_up" in k or "sma50_down" in k or
+         "corr63_positive" in k or "corr63_weak" in k or
+         "BrentUp_" in k or "BrentBRLUp_" in k or
+         "IBOVUp_" in k or "PETR_low_volatility" in k)
+    )
+    selected=[k for k in selected if priority(k)][:32]
     # Pair masks need cross-factor diversity, not duplicates of same column.
     candidates=[(k,feat[k],1) for k in keys]
     for a,b in itertools.combinations(selected,2):
