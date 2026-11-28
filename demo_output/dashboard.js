@@ -359,6 +359,18 @@ function renderReport(){
   const report=state.report;
   if(!report){const p=document.createElement('p');p.className='empty-text';p.textContent=
     'Sem relatório carregado. O código do modelo não executa pesos PyTorch no frontend estático.';root.append(p);return;}
+  if(report.schema==='PETR4_THREE_MODELS_BREAKOUT_MACD_NEURAL_V1' && Array.isArray(report.models)){
+    const rows=report.models.map(m=>[m.name,pretty(m.r25,2)+'%',pretty(m.r26,2)+'%',
+        pretty(m.total,2)+'%',pretty(m.dd,2)+'%',String(m.entries)]);
+    buildTable(['PETR4 · 2025–2026','2025','2026','Total','Drawdown','Entradas'],rows,root);
+    const note=document.createElement('p');note.className='group-note';
+    note.textContent='469 pregões; R$ 10.000 iniciais, 13 bps por lado e preços ajustados por proventos (proxy). Resultados FIXOS: sliders NÃO executam novamente as estratégias. O MACD foi selecionado retrospectivamente e as ondas Elliott têm rótulos heurísticos.';
+    root.append(note);
+    const link=document.createElement('a');link.href=report.source_run_url;
+    link.target='_blank';link.rel='noopener noreferrer';link.className='btn btn-subtle';
+    link.textContent='Auditoria e arquivos da execução ↗';root.append(link);
+    return;
+  }
   const rows=[];
   if(report.modes){
     for(const [mode,value] of Object.entries(report.modes))
@@ -564,6 +576,15 @@ function setup(){
   $('loadDemo').addEventListener('click',loadDemo);
   $('runBacktest').addEventListener('click',startBacktest);
   $('downloadExampleSchema').addEventListener('click',schemaExample);
+  $('loadPetr4Report').addEventListener('click',async()=>{
+    try{
+      const response=await fetch('/petr4_three_models_reference.json',{cache:'no-store'});
+      if(!response.ok)throw Error('Não foi possível abrir o relatório PETR4');
+      state.report=await response.json();
+      renderReport();
+      notify('Benchmark PETR4 de 3 modelos carregado. Métricas são fixas da execução auditada.');
+    }catch(e){errorMessage(e);}
+  });
   $('exportConfig').addEventListener('click',()=>{
     try{
       const json=JSON.stringify({schema:'elliott-dashboard-1.0',exported_utc:new Date().toISOString(),
