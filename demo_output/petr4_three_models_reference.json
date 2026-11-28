@@ -1,0 +1,74 @@
+{
+  "schema": "PETR4_THREE_MODELS_BREAKOUT_MACD_NEURAL_V1",
+  "source_run_url": "https://github.com/TheTRIBE-HighTECH/elliot_waves/actions/runs/46170604821",
+  "source_artifact_url": "https://github.com/TheTRIBE-HighTECH/elliot_waves/actions/runs/46170604821/artifacts/15272908386",
+  "source_file": "research/three_model_runs/report.json",
+  "market": "PETR4.SA",
+  "timeframe": "D1",
+  "holdout": "2025-01-02 a 2026-11-17",
+  "sessions": 469,
+  "cost_bps_per_side": 13,
+  "initial_capital_brl": 10000,
+  "price_basis": "Yahoo back-adjusted dividend total-return proxy; not executable quotes",
+  "read_only": true,
+  "weak_elliott_labels": true,
+  "retrospective_MACD_selection": true,
+  "params_note": "Controles do dashboard não reexecutam os pesos nem recalculam as métricas deste relatório fixo",
+  "models": [
+    {
+      "name": "Rompimento + ATR",
+      "key": "ATR_breakout",
+      "r25": -19.825555365842973,
+      "r26": 13.441662949127696,
+      "total": -9.048776746784593,
+      "dd": 20.534548229110662,
+      "sharpe": -0.34076386106153556,
+      "entries": 15,
+      "exp": 21.748400852878465
+    },
+    {
+      "name": "MACD + Ibovespa/Brent",
+      "key": "MACD_intermarket",
+      "r25": 4.6315432426836445,
+      "r26": 65.05613525794189,
+      "total": 73.93691968151907,
+      "dd": 13.03997091448088,
+      "sharpe": 1.6363060160250447,
+      "entries": 19,
+      "exp": 49.46695095948827
+    },
+    {
+      "name": "ATR + Elliott GRU cronológico",
+      "key": "ATR_breakout_plus_Elliott_neural_calendar",
+      "r25": -6.310754199084744,
+      "r26": 11.272682545656142,
+      "total": 4.2505370594718705,
+      "dd": 15.465492064643538,
+      "sharpe": 0.1907828413840995,
+      "entries": 21,
+      "exp": 14.285714285714285
+    },
+    {
+      "name": "ATR + Elliott GRU informacional",
+      "key": "ATR_breakout_plus_Elliott_neural_information",
+      "r25": -7.124604373107591,
+      "r26": 9.267882783085057,
+      "total": 1.4829784279192904,
+      "dd": 11.396075121632387,
+      "sharpe": 0.0734263129756232,
+      "entries": 26,
+      "exp": 14.072494669509595
+    },
+    {
+      "name": "Buy & Hold",
+      "key": "buy_hold",
+      "r25": -6.003232532528258,
+      "r26": 50.68691892966994,
+      "total": 42.65465354226632,
+      "dd": 27.02748154429272,
+      "sharpe": 0.6851133995202099,
+      "entries": 1,
+      "exp": 100
+    }
+  ]
+}
